@@ -1,0 +1,2233 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <meta name="theme-color" content="#2563eb">
+  <meta name="description" content="Achievers Video Downloader — download videos from supported websites quickly and easily.">
+  <meta name="application-name" content="Achievers Video Downloader">
+
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+
+  <title>Achievers Video Downloader</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --text: #0f172a;
+      --text-soft: #475569;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --success: #16a34a;
+      --success-soft: #f0fdf4;
+      --danger: #dc2626;
+      --danger-soft: #fef2f2;
+      --warning: #d97706;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, .05);
+      --shadow: 0 10px 30px rgba(15, 23, 42, .08);
+      --shadow-lg: 0 24px 70px rgba(15, 23, 42, .12);
+      --radius-sm: 10px;
+      --radius: 16px;
+      --radius-lg: 24px;
+      color-scheme: light;
+    }
+
+    [data-theme="dark"] {
+      --bg: #070b14;
+      --surface: #0f172a;
+      --surface-2: #111c31;
+      --text: #f8fafc;
+      --text-soft: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border: #243148;
+      --primary: #60a5fa;
+      --primary-dark: #3b82f6;
+      --primary-soft: #132442;
+      --success: #4ade80;
+      --success-soft: #0b2415;
+      --danger: #f87171;
+      --danger-soft: #351316;
+      --warning: #fbbf24;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, .25);
+      --shadow: 0 15px 40px rgba(0, 0, 0, .25);
+      --shadow-lg: 0 30px 80px rgba(0, 0, 0, .35);
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, .07), transparent 32rem),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+      padding:
+        env(safe-area-inset-top)
+        0
+        env(safe-area-inset-bottom);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    a:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, .35);
+      outline-offset: 3px;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ───────────────────────── HEADER ───────────────────────── */
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .nav {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      text-decoration: none;
+      font-family: "Plus Jakarta Sans", Inter, sans-serif;
+      font-weight: 800;
+      letter-spacing: -.03em;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, .25);
+      font-weight: 800;
+      font-size: 17px;
+    }
+
+    .brand-name {
+      font-size: 16px;
+    }
+
+    .brand-name span {
+      color: var(--primary);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      transition: .2s ease;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    /* ───────────────────────── MAIN ───────────────────────── */
+
+    main {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+      flex: 1;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 74px 0 38px;
+    }
+
+    .eyebrow {
+      width: fit-content;
+      margin: 0 auto 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--primary);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .eyebrow-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, .12);
+    }
+
+    h1 {
+      margin: 0 auto;
+      max-width: 850px;
+      font-family: "Plus Jakarta Sans", Inter, sans-serif;
+      font-size: clamp(2.5rem, 7vw, 5rem);
+      line-height: .98;
+      letter-spacing: -.055em;
+      font-weight: 800;
+    }
+
+    .gradient-text {
+      color: var(--primary);
+    }
+
+    .hero-description {
+      max-width: 650px;
+      margin: 22px auto 0;
+      color: var(--text-muted);
+      font-size: clamp(1rem, 2vw, 1.12rem);
+    }
+
+    /* ───────────────────────── DOWNLOADER ───────────────────────── */
+
+    .downloader-card {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--surface);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .drop-zone {
+      padding: 30px;
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      transition: .2s ease;
+    }
+
+    .drop-zone.dragging {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .input-label {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--text-soft);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .url-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+    }
+
+    .url-wrap {
+      position: relative;
+    }
+
+    .url-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    #url {
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 0 16px 0 46px;
+      outline: none;
+      transition: .2s ease;
+    }
+
+    #url:focus {
+      border-color: var(--primary);
+      background: var(--surface);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, .09);
+    }
+
+    .btn {
+      min-height: 56px;
+      padding: 0 20px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: .2s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, .2);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+    }
+
+    .paste-btn {
+      padding-inline: 17px;
+    }
+
+    .input-hint {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-align: left;
+    }
+
+    .message {
+      min-height: 24px;
+      margin: 14px 4px 0;
+      color: var(--text-muted);
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .message.error {
+      color: var(--danger);
+    }
+
+    /* ───────────────────────── TRUST ───────────────────────── */
+
+    .trust-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      max-width: 760px;
+      margin: 28px auto 0;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .trust-item {
+      padding: 17px 12px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+
+    .trust-item:last-child {
+      border-right: 0;
+    }
+
+    .trust-icon {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--primary);
+      font-size: 18px;
+    }
+
+    .trust-title {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .trust-sub {
+      display: block;
+      margin-top: 2px;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    /* ───────────────────────── RESULT ───────────────────────── */
+
+    #res {
+      max-width: 900px;
+      margin: 28px auto 0;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      text-align: left;
+    }
+
+    .video-header {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .thumb-wrap {
+      position: relative;
+      overflow: hidden;
+      border-radius: 16px;
+      background: var(--surface-2);
+      aspect-ratio: 16 / 9;
+    }
+
+    .thumb {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .video-info {
+      min-width: 0;
+      padding-top: 3px;
+    }
+
+    .video-title {
+      margin: 0;
+      font-family: "Plus Jakarta Sans", Inter, sans-serif;
+      font-size: clamp(1.25rem, 3vw, 1.65rem);
+      line-height: 1.2;
+      letter-spacing: -.025em;
+      overflow-wrap: anywhere;
+    }
+
+    .video-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 9px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .section-heading {
+      margin: 26px 0 12px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .quality-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+      gap: 10px;
+    }
+
+    .quality-btn {
+      min-height: 58px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: var(--surface);
+      color: var(--text);
+      text-align: left;
+      padding: 11px 13px;
+      transition: .2s ease;
+    }
+
+    .quality-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      transform: translateY(-1px);
+    }
+
+    .quality-name {
+      display: block;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .quality-size {
+      display: block;
+      margin-top: 2px;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .quality-audio {
+      border-color: rgba(37, 99, 235, .35);
+      background: var(--primary-soft);
+    }
+
+    /* ───────────────────────── CLIP & SUBTITLES ───────────────────────── */
+
+    .advanced {
+      margin-top: 18px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+
+    .advanced summary {
+      cursor: pointer;
+      list-style: none;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .advanced summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .advanced summary::before {
+      content: "+";
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      margin-right: 8px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--primary);
+    }
+
+    .advanced[open] summary::before {
+      content: "−";
+    }
+
+    .clip-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .field label {
+      display: block;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .field input,
+    .subtitle-select {
+      width: 100%;
+      min-height: 46px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    .advanced-note {
+      margin: 10px 0 0;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .subtitle-row {
+      display: flex;
+      align-items: end;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .subtitle-field {
+      flex: 1;
+    }
+
+    /* ───────────────────────── JOB ───────────────────────── */
+
+    #job {
+      margin-top: 22px;
+    }
+
+    .job-card {
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 17px;
+      background: var(--surface-2);
+    }
+
+    .job-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 11px;
+    }
+
+    .job-status {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .job-percent {
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .progress-track {
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--border);
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #2563eb, #4f46e5);
+      transition: width .4s ease;
+    }
+
+    .job-name {
+      margin: 10px 0 0;
+      color: var(--text-muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .download-result {
+      margin-top: 14px;
+      padding: 15px;
+      border: 1px solid rgba(22, 163, 74, .25);
+      border-radius: 14px;
+      background: var(--success-soft);
+    }
+
+    .download-result-title {
+      margin: 0 0 10px;
+      color: var(--success);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .save-btn {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 18px;
+      border-radius: 11px;
+      background: var(--success);
+      color: white;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    /* ───────────────────────── RECENT ───────────────────────── */
+
+    #rw {
+      max-width: 900px;
+      margin: 30px auto 0;
+    }
+
+    .recent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 11px;
+    }
+
+    .recent-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .recent-clear {
+      border: 0;
+      background: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-decoration: underline;
+      padding: 5px;
+    }
+
+    #recent {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .recent-item {
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text-soft);
+      font-size: 12px;
+    }
+
+    /* ───────────────────────── FOOTER ───────────────────────── */
+
+    footer {
+      width: min(1080px, calc(100% - 32px));
+      margin: 60px auto 0;
+      padding: 28px 0 35px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .footer-brand {
+      font-weight: 800;
+      color: var(--text-soft);
+    }
+
+    .install {
+      margin-top: 12px;
+      border: 0;
+      padding: 0;
+      background: none;
+      color: var(--primary);
+      text-decoration: underline;
+      font-weight: 700;
+    }
+
+    /* ───────────────────────── LOADING ───────────────────────── */
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, .35);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+
+    /* ───────────────────────── RESPONSIVE ───────────────────────── */
+
+    @media (max-width: 760px) {
+      .nav {
+        min-height: 64px;
+      }
+
+      .brand-name {
+        display: none;
+      }
+
+      .hero {
+        padding: 52px 0 30px;
+      }
+
+      .downloader-card {
+        padding: 7px;
+      }
+
+      .drop-zone {
+        padding: 20px 15px;
+      }
+
+      .url-row {
+        grid-template-columns: 1fr;
+      }
+
+      .btn,
+      #url {
+        width: 100%;
+      }
+
+      .trust-row {
+        grid-template-columns: 1fr;
+      }
+
+      .trust-item {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .trust-item:last-child {
+        border-bottom: 0;
+      }
+
+      .video-header {
+        grid-template-columns: 1fr;
+      }
+
+      .thumb-wrap {
+        width: 100%;
+      }
+
+      .clip-row {
+        grid-template-columns: 1fr;
+      }
+
+      .subtitle-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 480px) {
+      main,
+      footer,
+      .nav {
+        width: min(100% - 20px, 1080px);
+      }
+
+      h1 {
+        font-size: 2.55rem;
+      }
+
+      .hero-description {
+        font-size: .95rem;
+      }
+
+      #res {
+        padding: 14px;
+        border-radius: 18px;
+      }
+
+      .quality-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .quality-btn {
+        min-height: 54px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <nav class="nav" aria-label="Main navigation">
+
+      <a href="/" class="brand" aria-label="Achievers Video Downloader home">
+        <span class="brand-mark">A</span>
+        <span class="brand-name">Achievers <span>Downloader</span></span>
+      </a>
+
+      <div class="nav-actions">
+        <button
+          class="icon-btn"
+          id="themeToggle"
+          type="button"
+          aria-label="Toggle dark mode"
+          title="Toggle dark mode"
+        >
+          <span id="themeIcon">☾</span>
+        </button>
+      </div>
+
+    </nav>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- HERO -->
+    <section class="hero">
+
+      <div class="eyebrow">
+        <span class="eyebrow-dot"></span>
+        Fast &amp; simple video downloads
+      </div>
+
+      <h1>
+        Download videos.<br>
+        <span class="gradient-text">Your way.</span>
+      </h1>
+
+      <p class="hero-description">
+        Paste a video link, choose your preferred quality or audio format,
+        and download your file in a few simple steps.
+      </p>
+
+    </section>
+
+    <!-- DOWNLOADER -->
+    <section class="downloader-card" aria-label="Video downloader">
+
+      <div class="drop-zone" id="dropZone">
+
+        <form id="f">
+
+          <label class="input-label" for="url">
+            Video URL
+          </label>
+
+          <div class="url-row">
+
+            <div class="url-wrap">
+              <span class="url-icon" aria-hidden="true">🔗</span>
+
+              <input
+                id="url"
+                type="url"
+                inputmode="url"
+                placeholder="Paste your video link here..."
+                autocomplete="off"
+                aria-label="Video URL"
+                required
+              >
+            </div>
+
+            <button
+              class="btn btn-secondary paste-btn"
+              type="button"
+              id="paste"
+            >
+              📋 Paste
+            </button>
+
+            <button
+              class="btn btn-primary"
+              id="fetch"
+              type="submit"
+            >
+              <span id="fetchText">Analyze video</span>
+            </button>
+
+          </div>
+
+        </form>
+
+        <div class="input-hint">
+          <span>Drop a supported video link anywhere in this area.</span>
+          <span>Free • No account required</span>
+        </div>
+
+        <p
+          class="message"
+          id="msg"
+          role="status"
+          aria-live="polite"
+        ></p>
+
+      </div>
+
+    </section>
+
+    <!-- TRUST -->
+    <section class="trust-row" aria-label="Service features">
+
+      <div class="trust-item">
+        <span class="trust-icon">⚡</span>
+        <span class="trust-title">Fast processing</span>
+        <span class="trust-sub">Quick video analysis</span>
+      </div>
+
+      <div class="trust-item">
+        <span class="trust-icon">🎯</span>
+        <span class="trust-title">Quality choices</span>
+        <span class="trust-sub">Choose your preferred format</span>
+      </div>
+
+      <div class="trust-item">
+        <span class="trust-icon">🔒</span>
+        <span class="trust-title">Privacy focused</span>
+        <span class="trust-sub">Temporary server files</span>
+      </div>
+
+    </section>
+
+    <!-- RESULT -->
+    <section id="res" hidden aria-live="polite"></section>
+
+    <!-- RECENT -->
+    <section id="rw" hidden>
+
+      <div class="recent-header">
+        <h2 class="recent-title">Recent links</h2>
+
+        <button
+          class="recent-clear"
+          id="clearRecent"
+          type="button"
+        >
+          Clear history
+        </button>
+      </div>
+
+      <div id="recent"></div>
+
+    </section>
+
+    <button
+      class="install"
+      id="inst"
+      type="button"
+      hidden
+    >
+      Install Achievers Downloader as an app
+    </button>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+
+    <div class="footer-inner">
+
+      <div>
+        <div class="footer-brand">
+          Achievers Video Downloader
+        </div>
+
+        <div>
+          Only download videos you own or have permission to save.
+          Files are automatically deleted from the server after 15 minutes.
+        </div>
+      </div>
+
+      <div>
+        © <span id="year"></span> Achievers
+      </div>
+
+    </div>
+
+  </footer>
+
+</div>
+
+<script>
+  /* ───────────────────────── HELPERS ───────────────────────── */
+
+  const $ = selector => document.querySelector(selector);
+
+  const el = (tag, props = {}, ...children) => {
+    const element = Object.assign(
+      document.createElement(tag),
+      props
+    );
+
+    if (children.length) {
+      element.append(...children);
+    }
+
+    return element;
+  };
+
+  const url = $('#url');
+  const msg = $('#msg');
+  const res = $('#res');
+  const fetchButton = $('#fetch');
+  const fetchText = $('#fetchText');
+
+  const say = (text, error = false) => {
+    msg.textContent = text || '';
+    msg.className = error ? 'message error' : 'message';
+  };
+
+  const dur = seconds => {
+    if (!seconds) return '';
+
+    seconds = Math.round(seconds);
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = String(seconds % 60).padStart(2, '0');
+
+    return hours
+      ? `${hours}:${String(minutes).padStart(2, '0')}:${secs}`
+      : `${minutes}:${secs}`;
+  };
+
+  const mb = bytes => {
+    if (!bytes) return '';
+
+    if (bytes > 1e9) {
+      return ` • ${(bytes / 1e9).toFixed(1)} GB`;
+    }
+
+    return ` • ${Math.max(1, Math.round(bytes / 1e6))} MB`;
+  };
+
+  /* ───────────────────────── API ───────────────────────── */
+
+  async function api(path, body) {
+
+    const response = await fetch(
+      path,
+      body
+        ? {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+          }
+        : {}
+    );
+
+    const data = await response
+      .json()
+      .catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        data.detail ||
+        `Request failed (${response.status})`
+      );
+    }
+
+    return data;
+  }
+
+  /* ───────────────────────── THEME ───────────────────────── */
+
+  const themeIcon = $('#themeIcon');
+
+  function applyTheme(theme) {
+
+    document.documentElement.dataset.theme = theme;
+
+    localStorage.setItem(
+      'achievers-theme',
+      theme
+    );
+
+    themeIcon.textContent =
+      theme === 'dark' ? '☀' : '☾';
+  }
+
+  function initTheme() {
+
+    const saved =
+      localStorage.getItem('achievers-theme');
+
+    if (saved) {
+      applyTheme(saved);
+      return;
+    }
+
+    const prefersDark =
+      window.matchMedia &&
+      window.matchMedia(
+        '(prefers-color-scheme: dark)'
+      ).matches;
+
+    applyTheme(prefersDark ? 'dark' : 'light');
+  }
+
+  $('#themeToggle').onclick = () => {
+
+    const current =
+      document.documentElement.dataset.theme;
+
+    applyTheme(
+      current === 'dark'
+        ? 'light'
+        : 'dark'
+    );
+  };
+
+  initTheme();
+
+  /* ───────────────────────── PASTE ───────────────────────── */
+
+  $('#paste').onclick = async () => {
+
+    try {
+
+      const text =
+        await navigator.clipboard.readText();
+
+      url.value = text.trim();
+
+      url.focus();
+
+      if (url.value) {
+        say('Link pasted. Click Analyze video.');
+      }
+
+    } catch {
+
+      say(
+        'Your browser blocked clipboard access. Paste the link into the box instead.',
+        true
+      );
+    }
+  };
+
+  /* ───────────────────────── ANALYZE ───────────────────────── */
+
+  $('#f').onsubmit = async event => {
+
+    event.preventDefault();
+
+    const value = url.value.trim();
+
+    if (!value) return;
+
+    res.hidden = true;
+
+    say('Analyzing your video link...');
+
+    fetchButton.disabled = true;
+
+    fetchText.innerHTML = `
+      <span class="spinner"></span>
+      Analyzing...
+    `;
+
+    try {
+
+      const data =
+        await api('/api/info', {
+          url: value
+        });
+
+      show(value, data);
+
+      say('');
+
+    } catch (error) {
+
+      say(
+        error.message ||
+        'Unable to analyze this link.',
+        true
+      );
+
+    } finally {
+
+      fetchButton.disabled = false;
+
+      fetchText.textContent =
+        'Analyze video';
+    }
+  };
+
+  /* ───────────────────────── VIDEO DISPLAY ───────────────────────── */
+
+  function show(videoUrl, data) {
+
+    remember(
+      videoUrl,
+      data.title
+    );
+
+    res.replaceChildren();
+
+    const header =
+      el('div', {
+        className: 'video-header'
+      });
+
+    /* Thumbnail */
+
+    if (data.thumbnail) {
+
+      const thumbWrap =
+        el('div', {
+          className: 'thumb-wrap'
+        });
+
+      thumbWrap.append(
+        el('img', {
+          className: 'thumb',
+          src: data.thumbnail,
+          alt: 'Video thumbnail',
+          referrerPolicy: 'no-referrer',
+          loading: 'lazy'
+        })
+      );
+
+      header.append(thumbWrap);
+    }
+
+    /* Information */
+
+    const info =
+      el('div', {
+        className: 'video-info'
+      });
+
+    info.append(
+      el('h2', {
+        className: 'video-title',
+        textContent:
+          data.title ||
+          'Untitled video'
+      })
+    );
+
+    const meta =
+      el('div', {
+        className: 'video-meta'
+      });
+
+    const metadata = [
+      data.uploader,
+      data.site,
+      dur(data.duration)
+    ].filter(Boolean);
+
+    metadata.forEach(item => {
+
+      meta.append(
+        el('span', {
+          className: 'meta-pill',
+          textContent: item
+        })
+      );
+
+    });
+
+    info.append(meta);
+
+    header.append(info);
+
+    res.append(header);
+
+    /* Quality */
+
+    const qualityHeading =
+      el('h3', {
+        className: 'section-heading',
+        textContent: 'Download format'
+      });
+
+    res.append(qualityHeading);
+
+    const qualityGrid =
+      el('div', {
+        className: 'quality-grid'
+      });
+
+    const heights =
+      Array.isArray(data.heights)
+        ? data.heights
+        : [];
+
+    const options = [
+      {
+        label: 'Best quality',
+        height: null,
+        audio: false
+      },
+
+      ...heights
+        .slice(0, 6)
+        .map(height => ({
+          label: `${height}p`,
+          height,
+          audio: false,
+          size: data.sizes
+            ? data.sizes[height]
+            : null
+        })),
+
+      {
+        label: 'Audio MP3',
+        height: null,
+        audio: true
+      }
+    ];
+
+    options.forEach(option => {
+
+      const button =
+        el('button', {
+          type: 'button',
+          className:
+            'quality-btn' +
+            (option.audio
+              ? ' quality-audio'
+              : '')
+        });
+
+      const name =
+        el('span', {
+          className: 'quality-name',
+          textContent:
+            option.audio
+              ? '🎵 Audio MP3'
+              : option.label
+        });
+
+      const size =
+        el('span', {
+          className: 'quality-size',
+          textContent:
+            option.audio
+              ? 'Audio only'
+              : option.size
+                ? `Video${mb(option.size)}`
+                : 'Available quality'
+        });
+
+      button.append(
+        name,
+        size
+      );
+
+      button.onclick = () =>
+        start(videoUrl, option);
+
+      qualityGrid.append(button);
+    });
+
+    res.append(qualityGrid);
+
+    /* Advanced */
+
+    const advanced =
+      el('details', {
+        className: 'advanced'
+      });
+
+    advanced.append(
+      el('summary', {
+        textContent:
+          'Advanced options'
+      })
+    );
+
+    const clipRow =
+      el('div', {
+        className: 'clip-row'
+      });
+
+    const startField =
+      el('div', {
+        className: 'field'
+      });
+
+    startField.append(
+      el('label', {
+        textContent: 'Start time'
+      }),
+      el('input', {
+        id: 'cs',
+        placeholder: '0:00',
+        inputMode: 'numeric',
+        'aria-label': 'Clip start time'
+      })
+    );
+
+    const endField =
+      el('div', {
+        className: 'field'
+      });
+
+    endField.append(
+      el('label', {
+        textContent: 'End time'
+      }),
+      el('input', {
+        id: 'ce',
+        placeholder: 'End of video',
+        inputMode: 'numeric',
+        'aria-label': 'Clip end time'
+      })
+    );
+
+    clipRow.append(
+      startField,
+      endField
+    );
+
+    advanced.append(clipRow);
+
+    advanced.append(
+      el('p', {
+        className: 'advanced-note',
+        textContent:
+          'Optional: enter a start and end time to download only a section of the video.'
+      })
+    );
+
+    /* Subtitles */
+
+    if (
+      Array.isArray(data.subs) &&
+      data.subs.length
+    ) {
+
+      const subtitleRow =
+        el('div', {
+          className: 'subtitle-row'
+        });
+
+      const subtitleField =
+        el('div', {
+          className: 'subtitle-field'
+        });
+
+      subtitleField.append(
+        el('label', {
+          className: 'field',
+          textContent: 'Subtitle language'
+        })
+      );
+
+      const select =
+        el('select', {
+          className: 'subtitle-select',
+          'aria-label':
+            'Subtitle language'
+        });
+
+      data.subs.forEach(language => {
+
+        select.append(
+          el('option', {
+            value: language,
+            textContent: language
+          })
+        );
+
+      });
+
+      subtitleField.append(select);
+
+      const subtitleButton =
+        el('button', {
+          className: 'btn btn-secondary',
+          type: 'button',
+          textContent:
+            'Download SRT'
+        });
+
+      subtitleButton.onclick = () =>
+        start(videoUrl, {
+          subs: select.value
+        });
+
+      subtitleRow.append(
+        subtitleField,
+        subtitleButton
+      );
+
+      advanced.append(subtitleRow);
+    }
+
+    res.append(advanced);
+
+    /* Job area */
+
+    res.append(
+      el('div', {
+        id: 'job'
+      })
+    );
+
+    res.hidden = false;
+
+    res.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+
+  /* ───────────────────────── TIME ───────────────────────── */
+
+  const secs = value => {
+
+    value =
+      String(value || '').trim();
+
+    if (!value) return null;
+
+    const parts =
+      value.split(':').map(Number);
+
+    if (
+      parts.length > 3 ||
+      parts.some(
+        number => Number.isNaN(number)
+      )
+    ) {
+      return NaN;
+    }
+
+    return parts.reduce(
+      (total, part) =>
+        total * 60 + part,
+      0
+    );
+  };
+
+  /* ───────────────────────── DOWNLOAD ───────────────────────── */
+
+  let busy = false;
+
+  async function start(videoUrl, option) {
+
+    if (busy) return;
+
+    const body = {
+      url: videoUrl,
+      height: option.height || null,
+      audio: !!option.audio,
+      subs: option.subs || null
+    };
+
+    if (!option.subs) {
+
+      const startInput =
+        $('#cs');
+
+      const endInput =
+        $('#ce');
+
+      body.start =
+        startInput
+          ? secs(startInput.value)
+          : null;
+
+      body.end =
+        endInput
+          ? secs(endInput.value)
+          : null;
+
+      if (
+        Number.isNaN(body.start) ||
+        Number.isNaN(body.end) ||
+        (
+          body.end != null &&
+          body.end <=
+            (body.start || 0)
+        )
+      ) {
+
+        say(
+          'Enter valid clip times, such as 1:30, and make sure the end is later than the start.',
+          true
+        );
+
+        return;
+      }
+    }
+
+    say('');
+
+    busy = true;
+
+    const buttons =
+      res.querySelectorAll('button');
+
+    buttons.forEach(
+      button =>
+        button.disabled = true
+    );
+
+    const job =
+      $('#job');
+
+    const jobCard =
+      el('div', {
+        className: 'job-card'
+      });
+
+    const top =
+      el('div', {
+        className: 'job-top'
+      });
+
+    const status =
+      el('span', {
+        className: 'job-status',
+        textContent:
+          'Starting download...'
+      });
+
+    const percent =
+      el('span', {
+        className: 'job-percent',
+        textContent: '0%'
+      });
+
+    top.append(
+      status,
+      percent
+    );
+
+    const track =
+      el('div', {
+        className: 'progress-track'
+      });
+
+    const bar =
+      el('div', {
+        className: 'progress-bar'
+      });
+
+    track.append(bar);
+
+    const name =
+      el('p', {
+        className: 'job-name',
+        textContent:
+          'Preparing your file...'
+      });
+
+    jobCard.append(
+      top,
+      track,
+      name
+    );
+
+    job.replaceChildren(jobCard);
+
+    try {
+
+      const response =
+        await api(
+          '/api/jobs',
+          body
+        );
+
+      const id =
+        response.id;
+
+      if (!id) {
+        throw new Error(
+          'The server did not return a download job ID.'
+        );
+      }
+
+      for (;;) {
+
+        await new Promise(
+          resolve =>
+            setTimeout(resolve, 1000)
+        );
+
+        const state =
+          await api(
+            '/api/jobs/' + id
+          );
+
+        if (
+          state.state === 'error'
+        ) {
+
+          throw new Error(
+            state.error ||
+            'The download failed.'
+          );
+        }
+
+        const progress =
+          Math.max(
+            0,
+            Math.min(
+              100,
+              Number(state.progress) || 0
+            )
+          );
+
+        bar.style.width =
+          progress + '%';
+
+        percent.textContent =
+          Math.round(progress) + '%';
+
+        if (
+          state.state === 'queued'
+        ) {
+
+          status.textContent =
+            state.queue
+              ? `Waiting in queue • Position ${state.queue}`
+              : 'Waiting in queue...';
+
+        } else {
+
+          status.textContent =
+            progress >= 100
+              ? 'Finalizing your file...'
+              : 'Preparing your file...';
+        }
+
+        if (
+          state.state === 'done'
+        ) {
+
+          status.textContent =
+            'Download ready';
+
+          percent.textContent =
+            '100%';
+
+          bar.style.width = '100%';
+
+          name.textContent =
+            state.name ||
+            'Your file is ready.';
+
+          const result =
+            el('div', {
+              className:
+                'download-result'
+            });
+
+          result.append(
+            el('p', {
+              className:
+                'download-result-title',
+              textContent:
+                '✓ Your download is ready'
+            })
+          );
+
+          const save =
+            el('a', {
+              className: 'save-btn',
+              href:
+                '/api/file/' + id,
+              download:
+                state.name || '',
+              textContent:
+                'Download file'
+            });
+
+          result.append(save);
+
+          jobCard.append(result);
+
+          break;
+        }
+      }
+
+    } catch (error) {
+
+      job.replaceChildren(
+        el('div', {
+          className:
+            'download-result',
+          style:
+            'background:var(--danger-soft);border-color:rgba(220,38,38,.25)'
+        },
+          el('p', {
+            className:
+              'download-result-title',
+            style:
+              'color:var(--danger)',
+            textContent:
+              'Download failed'
+          }),
+          el('p', {
+            className:
+              'job-name',
+            textContent:
+              error.message ||
+              'Something went wrong.'
+          })
+        )
+      );
+
+    } finally {
+
+      busy = false;
+
+      buttons.forEach(
+        button =>
+          button.disabled = false
+      );
+    }
+  }
+
+  /* ───────────────────────── RECENT LINKS ───────────────────────── */
+
+  function recent() {
+
+    try {
+
+      return JSON.parse(
+        localStorage.getItem(
+          'achievers-recent'
+        ) || '[]'
+      );
+
+    } catch {
+
+      return [];
+    }
+  }
+
+  function remember(videoUrl, title) {
+
+    try {
+
+      const updated = [
+        {
+          url: videoUrl,
+          title:
+            title || videoUrl
+        },
+
+        ...recent().filter(
+          item =>
+            item.url !== videoUrl
+        )
+      ].slice(0, 6);
+
+      localStorage.setItem(
+        'achievers-recent',
+        JSON.stringify(updated)
+      );
+
+    } catch {}
+
+    drawRecent();
+  }
+
+  function drawRecent() {
+
+    const items =
+      recent();
+
+    const recentContainer =
+      $('#recent');
+
+    recentContainer.replaceChildren();
+
+    if (!items.length) {
+
+      $('#rw').hidden = true;
+
+      return;
+    }
+
+    items.forEach(item => {
+
+      const button =
+        el('button', {
+          className:
+            'recent-item',
+          type: 'button',
+          textContent:
+            (item.title ||
+              item.url).slice(0, 50),
+          title:
+            item.url
+        });
+
+      button.onclick = () => {
+
+        url.value =
+          item.url;
+
+        $('#f').requestSubmit();
+      };
+
+      recentContainer.append(button);
+    });
+
+    $('#rw').hidden = false;
+  }
+
+  $('#clearRecent').onclick = () => {
+
+    try {
+      localStorage.removeItem(
+        'achievers-recent'
+      );
+    } catch {}
+
+    drawRecent();
+  };
+
+  drawRecent();
+
+  /* ───────────────────────── DRAG & DROP ───────────────────────── */
+
+  const dropZone =
+    $('#dropZone');
+
+  function take(text) {
+
+    const match =
+      String(text || '').match(
+        /https?:\/\/[^\s]+/i
+      );
+
+    if (!match) {
+
+      say(
+        'No video link was detected.',
+        true
+      );
+
+      return;
+    }
+
+    url.value =
+      match[0];
+
+    $('#f').requestSubmit();
+  }
+
+  ['dragenter', 'dragover'].forEach(
+    eventName => {
+
+      dropZone.addEventListener(
+        eventName,
+        event => {
+
+          event.preventDefault();
+
+          dropZone.classList.add(
+            'dragging'
+          );
+        }
+      );
+    }
+  );
+
+  ['dragleave', 'drop'].forEach(
+    eventName => {
+
+      dropZone.addEventListener(
+        eventName,
+        event => {
+
+          event.preventDefault();
+
+          dropZone.classList.remove(
+            'dragging'
+          );
+        }
+      );
+    }
+  );
+
+  dropZone.addEventListener(
+    'drop',
+    event => {
+
+      const text =
+        event.dataTransfer.getData(
+          'text/uri-list'
+        ) ||
+        event.dataTransfer.getData(
+          'text'
+        );
+
+      take(text);
+    }
+  );
+
+  /* ───────────────────────── SHARED LINKS ───────────────────────── */
+
+  const query =
+    new URLSearchParams(
+      location.search
+    );
+
+  if (
+    query.has('url') ||
+    query.has('text')
+  ) {
+
+    take(
+      query.get('url') +
+      ' ' +
+      query.get('text')
+    );
+
+    history.replaceState(
+      null,
+      '',
+      '/'
+    );
+  }
+
+  /* ───────────────────────── PWA ───────────────────────── */
+
+  let installPrompt;
+
+  window.addEventListener(
+    'beforeinstallprompt',
+    event => {
+
+      event.preventDefault();
+
+      installPrompt =
+        event;
+
+      $('#inst').hidden = false;
+    }
+  );
+
+  $('#inst').onclick = async () => {
+
+    if (!installPrompt) return;
+
+    installPrompt.prompt();
+
+    try {
+      await installPrompt.userChoice;
+    } catch {}
+
+    installPrompt = null;
+
+    $('#inst').hidden = true;
+  };
+
+  if (
+    'serviceWorker' in navigator
+  ) {
+
+    window.addEventListener(
+      'load',
+      () => {
+
+        navigator.serviceWorker
+          .register('/sw.js')
+          .catch(() => {});
+
+      }
+    );
+  }
+
+  /* ───────────────────────── YEAR ───────────────────────── */
+
+  $('#year').textContent =
+    new Date().getFullYear();
+
+</script>
+
+</body>
+</html>

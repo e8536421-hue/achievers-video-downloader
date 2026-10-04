@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Local backups
+app.backup.py
+app.step1.py
+*.backup
+*.bak
+
+# Downloaded / temporary media
+downloads/
+tmp/
+temp/
+*.part
+*.ytdl
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
