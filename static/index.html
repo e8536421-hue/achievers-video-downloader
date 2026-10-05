@@ -929,6 +929,67 @@
         min-height: 54px;
       }
     }
+    /* Reserved ad spaces stay in normal flow, outside downloader controls. */
+    .ad-area {
+      max-width: 900px;
+      min-width: 0;
+      margin: 40px auto;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .ad-label {
+      margin: 0 0 12px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .ad-slot {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      color: var(--text-muted);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .ad-area--leaderboard {
+      display: none;
+    }
+
+    .ad-slot--leaderboard {
+      width: 728px;
+      height: 90px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    .ad-slot--native {
+      width: 100%;
+      min-height: 180px;
+    }
+
+    #container-173bd25a12e240a688efa71a28dc9bbf {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    /* Main has 32px outer gutters; reserve space for padding and borders too.
+       Never scale the fixed 728x90 creative to fit a mobile screen.
+       When activated, also gate script loading on available slot width. */
+    @media (min-width: 800px) {
+      .ad-area--leaderboard {
+        display: block;
+      }
+    }
   </style>
 </head>
 
@@ -962,6 +1023,54 @@
   <!-- MAIN -->
   <main>
 
+    <!-- Adsterra 31565233: exact publisher-supplied embed; desktop only. -->
+    <aside class="ad-area ad-area--leaderboard" aria-labelledby="leaderboard-ad-label" data-placement-id="31565233">
+      <p class="ad-label" id="leaderboard-ad-label">Advertisement</p>
+      <div class="ad-slot ad-slot--leaderboard" id="adsterra-leaderboard-slot">
+        <span>Advertisement space</span>
+      </div>
+    </aside>
+    <script>
+      (() => {
+        const slot = document.getElementById('adsterra-leaderboard-slot');
+        const desktop = window.matchMedia('(min-width: 800px)');
+        let loaded = false;
+        const loadBanner = () => {
+          if (loaded || !desktop.matches || slot.getBoundingClientRect().width < 728) return;
+          loaded = true;
+          const frame = document.createElement('iframe');
+          frame.title = 'Advertisement';
+          frame.width = '728';
+          frame.height = '90';
+          frame.style.border = '0';
+          frame.style.display = 'block';
+          // Isolate provider document.write and prevent top navigation/popups.
+          frame.setAttribute('sandbox', 'allow-scripts');
+          frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+          frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8">
+            <style>html,body{margin:0;width:728px;height:90px;overflow:hidden}</style>
+            </head><body><script>
+              atOptions = {
+                'key': 'c1607918ab2d91ade8037d36a7b7c333',
+                'format': 'iframe',
+                'height': 90,
+                'width': 728,
+                'params': {}
+              };
+            <\/script>
+            <script src="https://bellnewyork.org/22/c1607918ab2d91ade8037d36a7b7c333"><\/script>
+            </body></html>`;
+          slot.replaceChildren(frame);
+        };
+        desktop.addEventListener('change', loadBanner);
+        if ('ResizeObserver' in window) {
+          new ResizeObserver(loadBanner).observe(slot);
+        } else {
+          window.addEventListener('resize', loadBanner);
+        }
+        loadBanner();
+      })();
+    </script>
     <!-- HERO -->
     <section class="hero">
 
@@ -1090,6 +1199,15 @@
 
     </section>
 
+    <!-- Natural break after downloader/results/history, outside all real controls.
+         Adsterra 31565232: exact publisher-supplied native embed. -->
+    <aside class="ad-area ad-area--native" aria-labelledby="native-ad-label" data-placement-id="31565232">
+      <p class="ad-label" id="native-ad-label">Advertisement</p>
+      <div class="ad-slot ad-slot--native" id="adsterra-native-slot">
+        <script async="async" data-cfasync="false" src="https://bellnewyork.org/21/173bd25a12e240a688efa71a28dc9bbf"></script>
+        <div id="container-173bd25a12e240a688efa71a28dc9bbf"></div>
+      </div>
+    </aside>
     <button
       class="install"
       id="inst"

@@ -8,7 +8,7 @@ import threading
 import time
 import uuid
 
-from collections import defaultdict, deque
+from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import urlparse
@@ -31,6 +31,19 @@ JOB_TTL = max(60, int(os.getenv("JOB_TTL", "900")))
 RATE_INFO = max(1, int(os.getenv("RATE_INFO", "20")))
 RATE_JOBS = max(1, int(os.getenv("RATE_JOBS", "6")))
 RATE_WINDOW = max(10, int(os.getenv("RATE_WINDOW", "600")))
+MAX_PENDING = max(0, int(os.getenv("MAX_PENDING", "4")))
+RATE_STATUS = max(1, int(os.getenv("RATE_STATUS", "180")))
+RATE_FILE = max(1, int(os.getenv("RATE_FILE", "20")))
+
+# Never infer trust from a header or trust all private networks. Configure only
+# verified ingress proxy addresses, including intermediate proxies in XFF.
+TRUSTED_PROXY_CIDRS = tuple(
+    ipaddress.ip_network(value.strip(), strict=False)
+    for value in os.getenv("TRUSTED_PROXY_CIDRS", "").split(",")
+    if value.strip()
+)
+if any(network.prefixlen == 0 for network in TRUSTED_PROXY_CIDRS):
+    raise ValueError("Universal proxy trust is not allowed.")
 
 WORKDIR = Path(
     os.getenv(
@@ -66,7 +79,7 @@ pool = ThreadPoolExecutor(
 jobs = {}
 jobs_lock = threading.RLock()
 
-hits = defaultdict(deque)
+hits = {}
 hits_lock = threading.Lock()
 
 
@@ -74,51 +87,63 @@ hits_lock = threading.Lock()
 # Request / rate-limit helpers
 # ============================================================
 
+def normalize_ip(value: str):
+    address = ipaddress.ip_address(value)
+    if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
+        address = address.ipv4_mapped
+    if getattr(address, "scope_id", None):
+        raise ValueError("Scoped addresses are not accepted.")
+    return address
+
+
 def client_ip(request: Request) -> str:
-    """
-    Return the client IP.
+    peer = request.client.host if request.client else "unknown"
+    try:
+        address = normalize_ip(peer)
+        peer = str(address)
+        trusted = lambda ip: any(ip in net for net in TRUSTED_PROXY_CIDRS)
+        if not trusted(address):
+            return peer
+        # Combine duplicate headers in their original order, then walk from
+        # the socket peer towards the first untrusted hop. Ignore spoofed left
+        # prefixes. Invalid/oversized chains fall back to the socket peer.
+        forwarded = ",".join(request.headers.getlist("x-forwarded-for"))
+        if not forwarded or len(forwarded) > 4096:
+            return peer
+        for item in reversed(forwarded.split(",")):
+            address = normalize_ip(item.strip())
+            if not trusted(address):
+                return str(address)
+        return peer
+    except ValueError:
+        return peer
 
-    X-Forwarded-For is only trusted when TRUST_PROXY is
-    explicitly enabled.
-    """
-    if os.getenv("TRUST_PROXY", "").lower() in {
-        "1",
-        "true",
-        "yes",
-    }:
-        forwarded = request.headers.get("x-forwarded-for")
 
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-
-    return request.client.host if request.client else "unknown"
-
-
-def limit(
-    request: Request,
-    bucket: str,
-    n: int,
-    window: int,
-):
-    """
-    Simple in-memory rate limiter.
-    """
-    ip = client_ip(request)
-    now = time.time()
-
+def prune_hits(now=None):
+    """Discard all idle buckets, using each bucket's actual window."""
+    now = time.monotonic() if now is None else now
     with hits_lock:
-        q = hits[(bucket, ip)]
+        for key, (window, queue) in list(hits.items()):
+            while queue and now - queue[0] >= window:
+                queue.popleft()
+            if not queue:
+                del hits[key]
 
-        while q and now - q[0] > window:
-            q.popleft()
 
-        if len(q) >= n:
+def limit(request: Request, bucket: str, n: int, window: int):
+    ip = client_ip(request)
+    now = time.monotonic()
+    with hits_lock:
+        _, queue = hits.setdefault((bucket, ip), (window, deque()))
+        while queue and now - queue[0] >= window:
+            queue.popleft()
+        if len(queue) >= n:
+            retry = max(1, int(window - (now - queue[0]) + 0.999))
             raise HTTPException(
-                429,
-                "Too many requests. Please wait and try again.",
+                429, "Too many requests. Please wait and try again.",
+                headers={"Retry-After": str(retry)},
             )
-
-        q.append(now)
+        queue.append(now)
 
 
 # ============================================================
@@ -129,15 +154,10 @@ def is_public_ip(ip: str) -> bool:
     """
     Only allow publicly routable IP addresses.
     """
-    obj = ipaddress.ip_address(ip)
-
-    return not (
-        obj.is_private
-        or obj.is_loopback
-        or obj.is_link_local
-        or obj.is_reserved
-        or obj.is_multicast
-        or obj.is_unspecified
+    obj = normalize_ip(ip)
+    return obj.is_global and not (
+        obj.is_multicast or obj.is_reserved or obj.is_unspecified
+        or obj.is_loopback or obj.is_link_local
     )
 
 
@@ -154,7 +174,14 @@ def check_url(url: str):
 
     url = url.strip()
 
-    parsed = urlparse(url)
+    try:
+        parsed = urlparse(url)
+        # Access port here even for literal IPs, so malformed ports are rejected.
+        parsed.port
+    except ValueError:
+        raise HTTPException(400, "Enter a valid website address.")
+    if any(ord(char) <= 32 or ord(char) == 127 for char in url) or "\\" in url:
+        raise HTTPException(400, "Enter a valid website address.")
 
     if parsed.scheme not in ("http", "https"):
         raise HTTPException(
@@ -179,7 +206,7 @@ def check_url(url: str):
     # Reject credentials embedded in the URL.
     # Example:
     # https://username:password@example.com/video
-    if parsed.username or parsed.password:
+    if parsed.username is not None or parsed.password is not None:
         raise HTTPException(
             400,
             "URLs containing embedded credentials are not allowed.",
@@ -193,11 +220,14 @@ def check_url(url: str):
         "ip6-loopback",
     }
 
-    if hostname.lower() in blocked_hostnames:
+    if hostname.lower() in blocked_hostnames or hostname.lower().endswith(".localhost"):
         raise HTTPException(
             400,
             "That address isn't allowed.",
         )
+
+    if "%" in hostname:
+        raise HTTPException(400, "That address isn't allowed.")
 
     # If the hostname itself is an IP address,
     # validate it directly.
@@ -271,6 +301,18 @@ def check_url(url: str):
             )
 
     return parsed
+
+
+class PublicYoutubeDL(yt_dlp.YoutubeDL):
+    """Revalidate extractor/media request destinations before dispatch.
+
+    This is defense in depth, not DNS pinning or a redirect firewall: transports
+    may follow redirects internally, and FFmpeg uses its own network stack.
+    """
+
+    def urlopen(self, request):
+        check_url(request if isinstance(request, str) else request.url)
+        return super().urlopen(request)
 
 
 # ============================================================
@@ -373,7 +415,9 @@ def purge():
         expired = [
             jid
             for jid, job in jobs.items()
-            if job["created"] < cutoff
+            if job.get("state") in {"done", "error"}
+            and job.get("finished") is not None
+            and job["finished"] < cutoff
         ]
 
         for jid in expired:
@@ -394,6 +438,7 @@ def sweeper():
 
         try:
             purge()
+            prune_hits()
         except Exception:
             pass
 
@@ -529,7 +574,7 @@ def info(
     }
 
     try:
-        with yt_dlp.YoutubeDL(options) as ydl:
+        with PublicYoutubeDL(options) as ydl:
             data = ydl.extract_info(
                 req.url,
                 download=False,
@@ -658,7 +703,7 @@ def info(
 # Download worker
 # ============================================================
 
-def run_job(
+def _run_job(
     jid: str,
     req: JobReq,
 ):
@@ -670,6 +715,7 @@ def run_job(
 
         job["state"] = "running"
 
+    check_url(req.url)  # DNS may have changed while this job was queued.
     out = WORKDIR / jid
     out.mkdir(
         parents=True,
@@ -839,7 +885,7 @@ def run_job(
     # --------------------------------------------------------
 
     try:
-        with yt_dlp.YoutubeDL(options) as ydl:
+        with PublicYoutubeDL(options) as ydl:
             ydl.download(
                 [req.url]
             )
@@ -864,6 +910,11 @@ def run_job(
                 f"It may exceed the {MAX_MB} MB limit."
             )
 
+        # This check runs after merge, clipping and audio/subtitle conversion.
+        # Remove the whole job's artifacts if any final output exceeds the cap.
+        if any(p.stat().st_size > MAX_MB * 1024 * 1024 for p in files):
+            raise RuntimeError("File size limit exceeded.")
+
         result = max(
             files,
             key=lambda p: p.stat().st_size,
@@ -885,6 +936,22 @@ def run_job(
                     state="error",
                     error=clean_err(exc),
                 )
+
+
+def run_job(jid: str, req: JobReq):
+    try:
+        _run_job(jid, req)
+    except Exception as exc:
+        with jobs_lock:
+            if jid in jobs:
+                jobs[jid].update(state="error", error=clean_err(exc))
+    finally:
+        with jobs_lock:
+            job = jobs.get(jid)
+            if job and job.get("state") in {"done", "error"}:
+                if job["state"] == "error":
+                    shutil.rmtree(WORKDIR / jid, ignore_errors=True)
+                job["finished"] = time.time()
 
 
 # ============================================================
@@ -939,17 +1006,24 @@ def create_job(
     jid = uuid.uuid4().hex
 
     with jobs_lock:
+        active = sum(job["state"] in {"queued", "running"} for job in jobs.values())
+        if active >= WORKERS + MAX_PENDING:
+            raise HTTPException(
+                503, "The download queue is full. Please try again shortly.",
+                headers={"Retry-After": "30"},
+            )
         jobs[jid] = {
-            "state": "queued",
-            "progress": 0,
-            "created": time.time(),
+            "state": "queued", "progress": 0,
+            "created": time.time(), "finished": None,
         }
-
-    pool.submit(
-        run_job,
-        jid,
-        req,
-    )
+        try:
+            pool.submit(run_job, jid, req)
+        except Exception:
+            jobs.pop(jid, None)
+            raise HTTPException(
+                503, "Downloads are temporarily unavailable. Please try again shortly.",
+                headers={"Retry-After": "30"},
+            )
 
     return {
         "id": jid
@@ -961,7 +1035,9 @@ def create_job(
 # ============================================================
 
 @app.get("/api/jobs/{jid}")
-def job_status(jid: str):
+def job_status(jid: str, request: Request):
+    limit(request, "status", RATE_STATUS, 60)
+    purge()
     with jobs_lock:
         job = jobs.get(jid)
 
@@ -1007,7 +1083,9 @@ def job_status(jid: str):
 # ============================================================
 
 @app.get("/api/file/{jid}")
-def get_file(jid: str):
+def get_file(jid: str, request: Request):
+    limit(request, "file", RATE_FILE, 60)
+    purge()
     with jobs_lock:
         job = jobs.get(jid)
 
