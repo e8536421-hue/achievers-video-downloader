@@ -279,30 +279,84 @@ def check_url(url: str):
 
 def clean_err(exc: Exception) -> str:
     """
-    Convert internal yt-dlp / FFmpeg errors into a concise
-    user-facing message.
+    Convert internal yt-dlp / FFmpeg errors into safe,
+    concise user-facing messages.
     """
     msg = re.sub(
-        r"\x1b\[[0-9;]*m",
+        r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\))",
         "",
         str(exc),
     )
+    msg = re.sub(r"\bERROR:\s*", "", msg, flags=re.IGNORECASE).strip()
+    lower = msg.lower().replace("’", "'")
 
-    msg = msg.replace(
-        "ERROR: ",
-        "",
-    ).strip()
+    if any(text in lower for text in (
+        "sign in to confirm you're not a bot",
+        "sign in to confirm you are not a bot",
+        "cookies-from-browser", "login required", "authentication required",
+        "login is required", "sign in required", "please sign in",
+        "requires authentication", "requires login", "confirm you're not a bot",
+    )):
+        return (
+            "This video provider is currently blocking server-based downloads. "
+            "Please try another supported public video or try again later."
+        )
 
-    first = next(
-        (
-            line.strip()
-            for line in msg.splitlines()
-            if line.strip()
-        ),
-        "",
-    )
+    if any(text in lower for text in (
+        "not available in your country", "not available in your region",
+        "geo restricted", "geo-restricted", "geographic restriction",
+        "geographical restriction", "blocked in your country",
+        "not available from your location",
+    )):
+        return "This video is not available in the server's region."
 
-    return first[:300] or "Something went wrong."
+    if any(text in lower for text in (
+        "private video", "video is private", "video unavailable",
+        "video is unavailable", "not available", "video has been removed",
+        "video has been deleted", "members-only", "age-restricted",
+    )):
+        return "This video is unavailable or cannot be accessed publicly."
+
+    if any(text in lower for text in (
+        "unsupported url", "unsupported provider", "unsupported site",
+        "no suitable extractor", "not a valid url", "invalid url",
+    )):
+        return "This link or video provider is not supported. Please try another link."
+
+    if re.search(r"\b429\b", lower) or any(text in lower for text in (
+        "too many requests", "rate limit", "rate-limit",
+    )):
+        return "This video provider is receiving too many requests. Please try again later."
+
+    if isinstance(exc, TimeoutError) or any(text in lower for text in (
+        "timed out", "timeout", "time out",
+    )):
+        return "The video provider took too long to respond. Please try again later."
+
+    if isinstance(exc, (socket.gaierror, ConnectionError)) or any(text in lower for text in (
+        "getaddrinfo failed", "name or service not known",
+        "temporary failure in name resolution", "name resolution",
+        "nodename nor servname", "unable to resolve", "dns",
+        "connection refused", "connection reset", "connection aborted",
+        "network is unreachable", "network unreachable", "network error",
+        "remote end closed connection", "unable to download webpage",
+        "unable to download video data",
+    )):
+        return "Couldn't connect to the video provider. Please try again later."
+
+    if any(text in lower for text in (
+        "max-filesize", "max_filesize", "maximum file size",
+        "larger than max", "file is too large", "filesize limit",
+        "file size limit", "may exceed the",
+    )):
+        return f"This download exceeds the {MAX_MB} MB size limit. Please choose a smaller video or lower quality."
+
+    if any(text in lower for text in (
+        "ffmpeg", "ffprobe", "postprocessing", "post-processing",
+    )):
+        return "The downloaded media could not be processed. Please try another format or try again later."
+
+    return "Couldn't complete this request. Please try another supported public video or try again later."
 
 
 # ============================================================
