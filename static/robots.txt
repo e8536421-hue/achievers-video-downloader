@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://achievers-video-downloader.onrender.com/sitemap.xml

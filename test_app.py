@@ -172,6 +172,7 @@ def test_queue_full_and_finished_releases_capacity(client, monkeypatch):
     backend.jobs[ids[0]]["state"] = "running"
     response = client.post("/api/jobs", json={"url": "https://example.com/v"})
     assert response.status_code == 503
+    assert response.headers["x-robots-tag"] == "noindex"
     assert response.headers["retry-after"] == "30"
     assert backend.pool.submit.call_count == 2
     backend.jobs[ids[0]].update(state="done", finished=backend.time.time())
@@ -251,7 +252,9 @@ def test_mocked_job_lifecycle(client, monkeypatch, mode, suffix):
     assert job["state"] == "done" and job["progress"] == 100
     assert job["finished"] >= job["created"]
     assert client.get("/api/file/job").content == bytes(100)
+    assert client.get("/api/file/job").headers["x-robots-tag"] == "noindex"
     assert client.get("/api/jobs/job").json()["state"] == "done"
+    assert client.get("/api/jobs/job").headers["x-robots-tag"] == "noindex"
     if mode.get("audio"):
         assert fake_download.options["postprocessors"][0]["key"] == "FFmpegExtractAudio"
     if "start" in mode:
@@ -339,6 +342,7 @@ def test_info_endpoint_uses_guarded_downloader(client, monkeypatch):
     response = client.post("/api/info", json={"url": "https://example.com/v"})
     assert response.status_code == 200
     assert response.json()["heights"] == [720]
+    assert response.headers["x-robots-tag"] == "noindex"
     downloader.extract_info.assert_called_once_with("https://example.com/v", download=False)
 
 
@@ -362,3 +366,132 @@ def test_expired_completed_file_is_not_served(client):
     }
     assert client.get("/api/file/old").status_code == 404
     assert not out.exists()
+
+
+@pytest.mark.parametrize("query", ["", "?url=https%3A%2F%2Fexample.com%2Fvideo", "?text=shared&title=Example"])
+def test_homepage_canonical_and_integrations(client, query):
+    from html.parser import HTMLParser
+
+    class Tags(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.tags = []
+
+        def handle_starttag(self, tag, attrs):
+            self.tags.append((tag, dict(attrs)))
+
+    response = client.get("/" + query)
+    assert response.status_code == 200
+    assert "x-robots-tag" not in response.headers
+    parser = Tags()
+    parser.feed(response.text)
+    assert not any(tag == "meta" and attrs.get("name", "").lower() in {"robots", "googlebot"}
+                   and "noindex" in attrs.get("content", "").lower()
+                   for tag, attrs in parser.tags)
+    canonicals = [attrs["href"] for tag, attrs in parser.tags
+                  if tag == "link" and attrs.get("rel") == "canonical"]
+    assert canonicals == ["https://achievers-video-downloader.onrender.com/"]
+    assert any(tag == "meta" and attrs.get("name") == "google-site-verification"
+               and attrs.get("content") == "TsskHwINy31pjUNyqwZNyB_PYHBbP6miLl_3xh6TSHg"
+               for tag, attrs in parser.tags)
+    assert any(tag == "link" and attrs.get("rel") == "manifest"
+               and attrs.get("href") == "/manifest.json" for tag, attrs in parser.tags)
+    assert any(tag == "form" and attrs.get("id") == "f" for tag, attrs in parser.tags)
+    assert "query.get('url')" in response.text and "query.get('text')" in response.text
+    assert ".register('/sw.js')" in response.text
+    assert "https://bellnewyork.org/22/c1607918ab2d91ade8037d36a7b7c333" in response.text
+    assert "https://bellnewyork.org/21/173bd25a12e240a688efa71a28dc9bbf" in response.text
+    assert "frame.setAttribute('sandbox', 'allow-scripts')" in response.text
+
+
+@pytest.mark.parametrize("method", ["GET", "HEAD"])
+@pytest.mark.parametrize("query", ["", "?url=https%3A%2F%2Fexample.com%2Fv&text=shared"])
+def test_index_alias_permanent_redirect(client, method, query):
+    response = client.request(method, "/index.html" + query, follow_redirects=False)
+    assert response.status_code == 308
+    assert response.headers["location"] == "/" + query
+    assert "x-robots-tag" not in response.headers
+    assert client.get(response.headers["location"]).status_code == 200
+
+
+@pytest.mark.parametrize("path,status", [
+    ("/healthz", 200), ("/openapi.json", 404), ("/api", 404),
+    ("/api/jobs/missing", 404), ("/api/file/missing", 404), ("/api/unknown", 404),
+])
+def test_utility_get_responses_noindex(client, path, status):
+    response = client.get(path)
+    assert response.status_code == status
+    assert response.headers["x-robots-tag"] == "noindex"
+
+
+@pytest.mark.parametrize("path", ["/api/info", "/api/jobs"])
+def test_api_validation_noindex(client, path):
+    response = client.post(path, json={})
+    assert response.status_code == 422
+    assert response.headers["x-robots-tag"] == "noindex"
+
+
+def test_job_creation_noindex(client):
+    response = client.post("/api/jobs", json={"url": "https://example.com/v"})
+    assert response.status_code == 200
+    assert response.headers["x-robots-tag"] == "noindex"
+    assert response.json()["id"] in backend.jobs
+
+
+def test_rate_limit_noindex(client, monkeypatch):
+    monkeypatch.setattr(backend, "RATE_INFO", 1)
+    first = client.post("/api/info", json={"url": "file:///etc/passwd"})
+    assert first.status_code == 400 and first.headers["x-robots-tag"] == "noindex"
+    response = client.post("/api/info", json={"url": "file:///etc/passwd"})
+    assert response.status_code == 429
+    assert response.headers["x-robots-tag"] == "noindex"
+    assert "retry-after" in response.headers
+
+
+def test_unhandled_utility_error_noindex(monkeypatch):
+    monkeypatch.setattr(backend, "limit", Mock(side_effect=RuntimeError("internal")))
+    with TestClient(backend.app, raise_server_exceptions=False) as instance:
+        response = instance.get("/api/jobs/missing")
+    assert response.status_code == 500
+    assert response.headers["x-robots-tag"] == "noindex"
+    assert response.json() == {"detail": "An unexpected server error occurred."}
+
+
+def test_robots_and_homepage_only_sitemap(client):
+    import xml.etree.ElementTree as ET
+
+    robots = client.get("/robots.txt")
+    assert robots.status_code == 200
+    assert robots.headers["content-type"].startswith("text/plain")
+    assert "User-agent: *" in robots.text and "Allow: /" in robots.text
+    assert "Disallow:" not in robots.text
+    assert "Sitemap: https://achievers-video-downloader.onrender.com/sitemap.xml" in robots.text
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    assert "xml" in sitemap.headers["content-type"]
+    root = ET.fromstring(sitemap.content)
+    ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+    assert root.tag == "{" + ns["s"] + "}urlset"
+    assert [node.text for node in root.findall("s:url/s:loc", ns)] == [
+        "https://achievers-video-downloader.onrender.com/"
+    ]
+    assert root.findall(".//s:lastmod", ns) == []
+    assert "x-robots-tag" not in robots.headers and "x-robots-tag" not in sitemap.headers
+
+
+def test_pwa_resources_and_missing_pages(client):
+    manifest = client.get("/manifest.json")
+    assert manifest.status_code == 200
+    data = manifest.json()
+    assert data["start_url"] == "/"
+    assert data["share_target"] == {
+        "action": "/", "method": "GET",
+        "params": {"title": "title", "text": "text", "url": "url"},
+    }
+    for path in ["/sw.js", "/icon-192.png", "/icon-512.png"]:
+        response = client.get(path)
+        assert response.status_code == 200
+        assert "x-robots-tag" not in response.headers
+    assert client.get("/missing-page").status_code == 404
+    assert client.get("/docs").status_code == 404
+    assert client.get("/redoc").status_code == 404

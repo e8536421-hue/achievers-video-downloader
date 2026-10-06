@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 
 import yt_dlp
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
 
@@ -64,7 +64,39 @@ app = FastAPI(
     version="1.0.0",
     docs_url=None,
     redoc_url=None,
+    openapi_url=None,
 )
+
+
+def is_utility_path(path):
+    return path == "/api" or path.startswith("/api/") or path in {
+        "/healthz", "/openapi.json",
+    }
+
+
+class UtilityNoIndexMiddleware:
+    """Apply indexing policy without buffering streamed download responses."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or not is_utility_path(scope["path"]):
+            return await self.app(scope, receive, send)
+
+        async def send_noindex(message):
+            if message["type"] == "http.response.start":
+                message = dict(message)
+                message["headers"] = [
+                    (key, value) for key, value in message.get("headers", [])
+                    if key.lower() != b"x-robots-tag"
+                ] + [(b"x-robots-tag", b"noindex")]
+            await send(message)
+
+        await self.app(scope, receive, send_noindex)
+
+
+app.add_middleware(UtilityNoIndexMiddleware)
 
 
 # ============================================================
@@ -526,6 +558,8 @@ async def unexpected_error(
 
     return JSONResponse(
         status_code=500,
+        # Unhandled errors are rendered outside user middleware by Starlette.
+        headers={"X-Robots-Tag": "noindex"} if is_utility_path(request.url.path) else None,
         content={
             "detail":
                 "An unexpected server error occurred."
@@ -1160,6 +1194,13 @@ static_dir = (
     Path(__file__).resolve().parent
     / "static"
 )
+
+@app.api_route("/index.html", methods=["GET", "HEAD"], include_in_schema=False)
+def redirect_home(request: Request):
+    # Preserve PWA/shared-link parameters while consolidating the HTML alias.
+    query = request.url.query
+    return RedirectResponse("/" + ("?" + query if query else ""), status_code=308)
+
 
 app.mount(
     "/",
