@@ -495,3 +495,122 @@ def test_pwa_resources_and_missing_pages(client):
     assert client.get("/missing-page").status_code == 404
     assert client.get("/docs").status_code == 404
     assert client.get("/redoc").status_code == 404
+
+
+def homepage_document(client):
+    """Parse server-delivered content, excluding scripts and styles from copy."""
+    from html.parser import HTMLParser
+
+    class Document(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.tags = []
+            self.text = []
+            self.headings = []
+            self.schemas = []
+            self.excluded = None
+            self.heading = None
+            self.schema = None
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            self.tags.append((tag, attrs))
+            if tag in {'script', 'style'}:
+                self.excluded = tag
+                if attrs.get('type') == 'application/ld+json':
+                    self.schema = []
+            if tag in {'h1', 'h2', 'title'}:
+                self.heading = (tag, [])
+
+        def handle_data(self, data):
+            if self.schema is not None:
+                self.schema.append(data)
+            if not self.excluded:
+                self.text.append(data)
+                if self.heading:
+                    self.heading[1].append(data)
+
+        def handle_endtag(self, tag):
+            if self.heading and tag == self.heading[0]:
+                self.headings.append((tag, ' '.join(''.join(self.heading[1]).split())))
+                self.heading = None
+            if tag == self.excluded:
+                if self.schema is not None:
+                    import json
+                    self.schemas.append(json.loads(''.join(self.schema)))
+                    self.schema = None
+                self.excluded = None
+
+    document = Document()
+    document.feed(client.get('/').text)
+    return document
+
+
+def test_homepage_seo_metadata_and_schema(client):
+    document = homepage_document(client)
+    title = 'Free Online Video Downloader | Achievers'
+    assert [text for tag, text in document.headings if tag == 'title'] == [title]
+    assert [text for tag, text in document.headings if tag == 'h1'] == ['Free Online Video Downloader']
+    metas = {attrs.get('name', attrs.get('property')): attrs.get('content')
+             for tag, attrs in document.tags if tag == 'meta'}
+    description = metas['description']
+    assert 'supported public videos' in description and 'where supported' in description
+    assert metas['og:title'] == metas['twitter:title'] == title
+    assert metas['og:description'] == metas['twitter:description'] == description
+    assert metas['og:type'] == 'website' and metas['twitter:card'] == 'summary'
+    assert metas['og:url'] == 'https://achievers-video-downloader.onrender.com/'
+    assert 'og:image' not in metas and 'twitter:image' not in metas
+    assert len(document.schemas) == 1
+    schema = document.schemas[0]
+    assert schema['@context'] == 'https://schema.org'
+    website, application = schema['@graph']
+    assert website['@type'] == 'WebSite' and application['@type'] == 'WebApplication'
+    for entity in schema['@graph']:
+        assert entity['url'] == metas['og:url']
+        assert entity['name'] == 'Achievers Video Downloader'
+        assert not ({'aggregateRating', 'review', 'publisher'} & entity.keys())
+    assert application['description'] == description
+    assert application['offers'] == {'@type': 'Offer', 'price': '0', 'priceCurrency': 'USD'}
+
+
+def test_homepage_visible_help_and_conservative_claims(client):
+    import re
+    document = homepage_document(client)
+    text = ' '.join(' '.join(document.text).split())
+    headings = [heading for tag, heading in document.headings if tag == 'h2']
+    for heading in ['How to Download a Video', 'Supported Platforms', 'Video Quality & Formats',
+                    'Troubleshooting', 'Frequently Asked Questions']:
+        assert heading in headings
+    assert 'TikTok and Facebook:' in text and 'tested working on this service' in text
+    assert 'YouTube: downloads are currently unreliable' in text and 'anti-bot challenges' in text
+    assert 'YouTube is not currently offered as a working supported platform.' in text
+    assert not re.search(r'no[ -]?watermark|any website|all websites|guaranteed (HD|MP4|MP3)', text, re.I)
+    assert 'MP4 is not guaranteed' in text
+    assert 'conversion may fail' in text
+    assert 'Public visibility alone does not grant permission' in text
+    assert 'do not bypass those controls' in text
+    assert 'free to use' in text and 'does not require an Achievers account' in text
+    ids = [attrs.get('id') for _, attrs in document.tags if attrs.get('id')]
+    assert len(ids) == len(set(ids))
+    targets = ['how-to-download', 'supported-platforms', 'quality-formats', 'troubleshooting', 'faq']
+    links = [attrs.get('href') for tag, attrs in document.tags if tag == 'a']
+    for target in targets:
+        assert target in ids and '#' + target in links
+    assert not any(link in {'/about', '/privacy', '/terms', '/contact'} for link in links)
+    html = client.get('/').text
+    assert html.index('id="f"') < html.index('id="how-to-download"')
+
+
+def test_homepage_ad_placements_and_reserved_space(client):
+    document = homepage_document(client)
+    placements = [attrs['data-placement-id'] for tag, attrs in document.tags
+                  if tag == 'aside' and 'data-placement-id' in attrs]
+    assert placements == ['31565233', '31565232']
+    html = client.get('/').text
+    assert html.count('>Advertisement</p>') == 2
+    assert "!desktop.matches || slot.getBoundingClientRect().width < 728" in html
+    assert "frame.setAttribute('sandbox', 'allow-scripts')" in html
+    assert "'key': 'c1607918ab2d91ade8037d36a7b7c333'" in html
+    assert 'script async="async" data-cfasync="false" src="https://bellnewyork.org/21/173bd25a12e240a688efa71a28dc9bbf"' in html
+    assert 'id="container-173bd25a12e240a688efa71a28dc9bbf"' in html
+    assert 'min-height: 180px;' in html and 'height: 90px;' in html

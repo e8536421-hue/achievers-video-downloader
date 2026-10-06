@@ -7,14 +7,49 @@
   <meta name="google-site-verification" content="TsskHwINy31pjUNyqwZNyB_PYHBbP6miLl_3xh6TSHg" />
 
   <meta name="theme-color" content="#2563eb">
-  <meta name="description" content="Achievers Video Downloader — download videos from supported websites quickly and easily.">
+  <meta name="description" content="Download supported public videos from a link. Choose available video quality or MP3 audio where supported. Free to use, with no account required.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Free Online Video Downloader | Achievers">
+  <meta property="og:description" content="Download supported public videos from a link. Choose available video quality or MP3 audio where supported. Free to use, with no account required.">
+  <meta property="og:url" content="https://achievers-video-downloader.onrender.com/">
+  <meta property="og:site_name" content="Achievers Video Downloader">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Free Online Video Downloader | Achievers">
+  <meta name="twitter:description" content="Download supported public videos from a link. Choose available video quality or MP3 audio where supported. Free to use, with no account required.">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://achievers-video-downloader.onrender.com/#website",
+      "url": "https://achievers-video-downloader.onrender.com/",
+      "name": "Achievers Video Downloader"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://achievers-video-downloader.onrender.com/#application",
+      "url": "https://achievers-video-downloader.onrender.com/",
+      "name": "Achievers Video Downloader",
+      "description": "Download supported public videos from a link. Choose available video quality or MP3 audio where supported. Free to use, with no account required.",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Web browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+  ]
+}
+  </script>
   <meta name="application-name" content="Achievers Video Downloader">
 
   <link rel="canonical" href="https://achievers-video-downloader.onrender.com/">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icon-192.png">
 
-  <title>Achievers Video Downloader</title>
+  <title>Free Online Video Downloader | Achievers</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -223,7 +258,7 @@
 
     .hero {
       text-align: center;
-      padding: 74px 0 38px;
+      padding: 36px 0 24px;
     }
 
     .eyebrow {
@@ -254,7 +289,7 @@
       margin: 0 auto;
       max-width: 850px;
       font-family: "Plus Jakarta Sans", Inter, sans-serif;
-      font-size: clamp(2.5rem, 7vw, 5rem);
+      font-size: clamp(2.5rem, 6vw, 4rem);
       line-height: .98;
       letter-spacing: -.055em;
       font-weight: 800;
@@ -847,7 +882,7 @@
       }
 
       .hero {
-        padding: 52px 0 30px;
+        padding: 28px 0 22px;
       }
 
       .downloader-card {
@@ -931,6 +966,18 @@
         min-height: 54px;
       }
     }
+    .homepage-guide { max-width: 900px; margin: 36px auto 0; }
+    .section-nav { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-bottom: 24px; color: var(--primary); font-size: 14px; }
+    .guide-section { scroll-margin-top: 90px; margin-top: 20px; padding: clamp(18px, 4vw, 28px); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+    .guide-section h2 { margin: 0 0 14px; font-family: "Plus Jakarta Sans", Inter, sans-serif; font-size: clamp(1.3rem, 3vw, 1.65rem); letter-spacing: -.025em; }
+    .guide-section h3 { margin: 20px 0 6px; font-size: 1rem; }
+    .guide-section p, .guide-section li { color: var(--text-soft); }
+    .guide-section p { margin: 0 0 12px; }
+    .guide-section p:last-child { margin-bottom: 0; }
+    .guide-section ol, .guide-section ul { margin: 0; padding-left: 24px; }
+    .guide-section li + li { margin-top: 10px; }
+    .input-hint { flex-wrap: wrap; }
+
     /* Reserved ad spaces stay in normal flow, outside downloader controls. */
     .ad-area {
       max-width: 900px;
@@ -1078,17 +1125,16 @@
 
       <div class="eyebrow">
         <span class="eyebrow-dot"></span>
-        Fast &amp; simple video downloads
+        Paste a link to get started
       </div>
 
       <h1>
-        Download videos.<br>
-        <span class="gradient-text">Your way.</span>
+        Free Online <span class="gradient-text">Video Downloader</span>
       </h1>
 
       <p class="hero-description">
-        Paste a video link, choose your preferred quality or audio format,
-        and download your file in a few simple steps.
+        Download a video from a link to supported public content. Choose available
+        video quality or MP3 audio where supported. Free to use, no account required.
       </p>
 
     </section>
@@ -1218,6 +1264,66 @@
     >
       Install Achievers Downloader as an app
     </button>
+
+    <div class="homepage-guide">
+      <nav class="section-nav" aria-label="Download help">
+        <a href="#how-to-download">How to download</a>
+        <a href="#supported-platforms">Supported platforms</a>
+        <a href="#quality-formats">Quality &amp; formats</a>
+        <a href="#troubleshooting">Troubleshooting</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+
+      <section class="guide-section" id="how-to-download" aria-labelledby="how-to-heading">
+        <h2 id="how-to-heading">How to Download a Video</h2>
+        <ol>
+          <li>Copy the link to a public video you own or have permission to download.</li>
+          <li>Paste it into the Video URL box above and select <strong>Analyze video</strong>.</li>
+          <li>Choose a listed video quality, or <strong>Audio MP3</strong> if the source can provide usable audio. Availability depends on the video and platform.</li>
+          <li>Wait for <strong>Download ready</strong>, then select <strong>Download file</strong> to save it to your device. Save promptly: server files are temporary.</li>
+        </ol>
+      </section>
+
+      <section class="guide-section" id="supported-platforms" aria-labelledby="platforms-heading">
+        <h2 id="platforms-heading">Supported Platforms</h2>
+        <p><strong>TikTok and Facebook:</strong> public video downloads have been tested working on this service. Individual links can still fail when content is removed, restricted, or the platform changes how it serves videos.</p>
+        <p><strong>YouTube:</strong> downloads are currently unreliable on this hosting environment because of anti-bot challenges. YouTube is not currently offered as a working supported platform.</p>
+        <p>Other public links may work, but have not been verified here. Support is not universal. Analyze a permitted link to check whether the service can read it.</p>
+        <p>Only download content you own or have permission to download, and respect platform terms and copyright. Public visibility alone does not grant permission. Private, login-required, DRM-protected, paywalled, or other access-controlled content may not work; do not bypass those controls.</p>
+      </section>
+
+      <section class="guide-section" id="quality-formats" aria-labelledby="formats-heading">
+        <h2 id="formats-heading">Video Quality &amp; Formats</h2>
+        <p>Quality choices come from the formats reported by the source. <strong>Best quality</strong> requests the best available source streams; selecting a resolution requests a stream up to that height where available, with a fallback if necessary. It does not improve the original video or guarantee HD.</p>
+        <p>The downloader prefers MP4-compatible streams and requests MP4 when merging video and audio. The final file format depends on the source and processing; MP4 is not guaranteed.</p>
+        <p><strong>Audio MP3</strong> requests audio extraction and conversion to MP3. It requires accessible audio and successful server processing, so conversion may fail for some links. The option does not guarantee that a particular video supports audio download.</p>
+      </section>
+
+      <section class="guide-section" id="troubleshooting" aria-labelledby="troubleshooting-heading">
+        <h2 id="troubleshooting-heading">Troubleshooting</h2>
+        <ul>
+          <li><strong>Link cannot be analyzed:</strong> check that you copied the individual video link and that the video is still public. If the source requires a login or blocks automated access, use its authorized download options.</li>
+          <li><strong>Download or conversion fails:</strong> try a lower listed quality or a video download instead of audio. Source changes and processing errors can prevent a download even after analysis succeeds.</li>
+          <li><strong>Size limit or busy server:</strong> follow the limit shown in the error message, choose a smaller video or lower quality, and wait before retrying a rate-limited request.</li>
+          <li><strong>File link has expired:</strong> analyze the original permitted link again and create a new download. Completed files are kept only temporarily.</li>
+          <li><strong>Paste button does not work:</strong> paste directly into the Video URL box; your browser may deny clipboard access.</li>
+        </ul>
+      </section>
+
+      <section class="guide-section" id="faq" aria-labelledby="faq-heading">
+        <h2 id="faq-heading">Frequently Asked Questions</h2>
+        <h3>Is Achievers free, and do I need an account?</h3>
+        <p>The downloader is free to use and does not require an Achievers account. Downloads are subject to service limits and source availability.</p>
+        <h3>Why are some quality choices missing?</h3>
+        <p>Only resolutions reported by the source are listed. A low-resolution original cannot become a higher-quality video through downloading.</p>
+        <h3>Can I download private or protected videos?</h3>
+        <p>This tool is intended for supported public content you are authorized to save. It does not provide a way to bypass logins, DRM, paywalls, geographic restrictions, or platform access controls.</p>
+        <h3>Where is my saved file?</h3>
+        <p>After selecting Download file, check your browser's download list or your device's Downloads folder. Recent links in this app are link history, not stored copies of your files.</p>
+        <h3>Can I use the downloader on a phone?</h3>
+        <p>Use the same link box in your mobile browser. Where your browser supports installation, the app's install option lets you add the downloader to your device.</p>
+      </section>
+    </div>
 
   </main>
 
