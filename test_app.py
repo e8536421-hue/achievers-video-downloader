@@ -646,6 +646,16 @@ def test_trust_routes_and_navigation(client, slug):
         assert client.get(alias).status_code == 200
 
 
+@pytest.mark.parametrize("slug", ["contact", "privacy", "terms"])
+def test_trust_published_contact_email(client, slug):
+    document = homepage_document(client, "/" + slug)
+    email = "imfocus231@gmail.com"
+    assert email in document.text
+    email_links = [attrs["href"] for tag, attrs in document.tags
+                   if tag == "a" and attrs.get("href", "").startswith("mailto:")]
+    assert email_links == ["mailto:" + email]
+
+
 def test_trust_unique_metadata_and_truthfulness(client):
     import re
     documents = [homepage_document(client, "/" + slug)
@@ -667,12 +677,11 @@ def test_trust_unique_metadata_and_truthfulness(client):
                    "no startup scan", "rate limiting", "cookies", "Google Fonts", "does not implement response caching"):
         assert detail in privacy
     assert "Adult ads are currently enabled and locked" in privacy
-    assert "direct contact channel is not yet published" in contact
     for text in texts:
         assert not re.search(r"registered company|registered office|GDPR.compliant|CCPA.compliant|we collect no data|we never use cookies", text, re.I)
     for doc in documents:
         links = [attrs.get("href", "") for tag, attrs in doc.tags if tag == "a"]
-        assert not any(link.startswith(("mailto:", "tel:")) or "github.com" in link for link in links)
+        assert not any(link.startswith("tel:") or "github.com" in link for link in links)
     home = client.get("/").text
     footer = home[home.index("<footer>"):home.index("</footer>")]
     for slug in ("about", "privacy", "terms", "contact"):
