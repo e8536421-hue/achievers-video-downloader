@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy | Achievers</title>
+<meta name="description" content="How Achievers Video Downloader handles submitted links, temporary files, browser history, advertising, and technical information.">
+<link rel="canonical" href="https://achievers-video-downloader.onrender.com/privacy">
+<link rel="stylesheet" href="/trust.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><a href="/">Achievers Video Downloader</a>
+</header>
+<main id="main">
+<h1>Privacy Policy
+</h1>
+<section>
+<h2>Scope and submitted links
+</h2>
+<p>This policy describes the current Achievers Video Downloader implementation. When you analyze a link or start a download, your browser sends the submitted URL and selected options to our server. The server requests information and media from the source platform and related media services. Those services receive network requests from the server and apply their own policies. Do not submit confidential links, credentials, or private access tokens.
+</p>
+<p>Processing handles video metadata such as titles, thumbnails, duration, uploader information, and available formats. Your browser may request thumbnail images directly from their source, exposing ordinary browser and network information to that source.
+</p>
+</section>
+<section>
+<h2>Temporary jobs and files
+</h2>
+<p>The app keeps job identifiers, state, progress, timestamps, output filenames and paths, and safe error messages in server memory. Submitted URLs and options are used while requests and queued jobs are processed. Media and processing files are written to temporary server storage.
+</p>
+<p>Completed and failed job records become eligible for cleanup after the configured JOB_TTL period, measured from job completion. The default is 900 seconds (15 minutes); deployment settings can change it. Cleanup runs approximately every 30 seconds and during job creation, status, and file requests. Failed-job files are also removed when the worker finishes handling the failure.
+</p>
+<p>Deletion is attempted, not guaranteed at an exact time. Running or queued jobs are not expired by this finished-job cleanup. Process interruptions, cleanup failures, or leftover files outside tracked jobs may delay removal; the app has no startup scan that guarantees their deletion. This is temporary delivery storage, not a permanent archive. Copies downloaded to your device are controlled by you.
+</p>
+</section>
+<section>
+<h2>Browser storage and shared links
+</h2>
+<p>The homepage uses localStorage to keep up to six recent submitted URLs and their titles under achievers-recent, and a theme preference under achievers-theme. Recent links are browser-side history, not saved media files. They persist until replaced or removed. Use Clear history on the homepage to remove recent links; clearing site data in your browser also removes stored preferences. Other people using the same browser profile may see this history. Selecting a recent link submits it again to the server.
+</p>
+<p>The installed app can receive shared links through homepage query parameters. The frontend processes those parameters and removes them from the displayed address using browser history replacement. The initial request can still reach hosting infrastructure with those parameters.
+</p>
+</section>
+<section>
+<h2>Technical information and logs
+</h2>
+<p>The app uses connection IP addresses, or forwarded client addresses only when trusted proxies are configured, with request timestamps in memory for rate limiting. Idle rate-limit entries are periodically pruned. Hosting and web-server infrastructure may process or log IP addresses, request paths and query strings, request timing, status codes, and browser headers to deliver and operate the service. The project does not establish an exact hosting-log retention period. Operational downloader output may also reach server logs; do not assume a submitted link is absent from all logs.
+</p>
+</section>
+<section>
+<h2>Third-party advertising and resources
+</h2>
+<p>The homepage includes two Adsterra advertising placements. Adult ads are currently enabled and locked for these units in the publisher account, so adult advertising may appear. Advertising is supplied by third parties; it is not an endorsement or a download control. These policy and information pages do not load advertising.
+</p>
+<p>Ad technology may process device, browser, network, and interaction information and may use cookies or other identifiers under its own policies. The app does not provide a cookie-consent or advertising-preference mechanism. For provider information, see <a href="https://adsterra.com/privacy-policy/" rel="external">Adsterra’s Privacy Policy</a>. Ad delivery domains and linked advertisers may have additional policies.
+</p>
+<p>The homepage also requests fonts from Google Fonts. External fonts, thumbnails, ads, and links can involve third-party network requests. This policy does not control those providers or their storage and tracking practices.
+</p>
+</section>
+<section>
+<h2>Installed app and service worker
+</h2>
+<p>The homepage registers a service worker and provides a web app manifest for installation and sharing. The current service worker does not implement response caching, offline downloads, or caching of third-party advertising. Installation does not make server downloads available offline. Normal browser caching and browser-managed storage can still apply.
+</p>
+</section>
+<section>
+<h2>Security, audience, and external links
+</h2>
+<p>The implementation includes URL validation, rate limits, and temporary-file controls, but no system is risk-free. Job links are not protected by a user account; anyone who obtains a valid job identifier may be able to retrieve its available output. Avoid sharing job links or submitting sensitive content.
+</p>
+<p>The service is not intended for children. Because adult advertising may appear, it should not be treated as a child-safe experience. Do not submit children’s personal information. External websites and advertisements operate under their own policies; review them before providing information or downloading anything.
+</p>
+</section>
+<section>
+<h2>Changes and contact status
+</h2>
+<p>This policy may be updated when the implementation or third-party services change. Review this page for the current policy. A direct contact channel is not yet published. See the <a href="/contact">Contact page</a> for the current status; there is currently no contact form or published email for privacy requests.
+</p>
+</section>
+<p><a href="/">Return to the downloader</a>
+</p>
+</main>
+<footer>
+<nav aria-label="Website information"><a href="/">Downloader</a><a href="/about">About</a><a href="/privacy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/contact">Contact</a>
+</nav>
+</footer>
+</body>
+</html>

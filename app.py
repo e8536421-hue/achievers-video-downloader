@@ -1202,6 +1202,24 @@ def redirect_home(request: Request):
     return RedirectResponse("/" + ("?" + query if query else ""), status_code=308)
 
 
+# Explicit public pages precede the root static mount. Consolidate aliases.
+TRUST_PAGES = ("about", "privacy", "terms", "contact")
+
+def trust_page(request: Request):
+    slug = request.url.path.strip("/")
+    return FileResponse(static_dir / f"{slug}.html", media_type="text/html")
+
+def redirect_trust_page(request: Request):
+    slug = request.url.path.strip("/").removesuffix(".html")
+    query = request.url.query
+    return RedirectResponse("/" + slug + ("?" + query if query else ""), status_code=308)
+
+for slug in TRUST_PAGES:
+    app.add_api_route("/" + slug, trust_page, methods=["GET", "HEAD"], include_in_schema=False)
+    for alias in ("/" + slug + "/", "/" + slug + ".html"):
+        app.add_api_route(alias, redirect_trust_page, methods=["GET", "HEAD"], include_in_schema=False)
+
+
 app.mount(
     "/",
     StaticFiles(

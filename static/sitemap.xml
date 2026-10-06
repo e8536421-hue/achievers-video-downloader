@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://achievers-video-downloader.onrender.com/</loc>
-  </url>
+  <url><loc>https://achievers-video-downloader.onrender.com/</loc></url>
+  <url><loc>https://achievers-video-downloader.onrender.com/about</loc></url>
+  <url><loc>https://achievers-video-downloader.onrender.com/privacy</loc></url>
+  <url><loc>https://achievers-video-downloader.onrender.com/terms</loc></url>
+  <url><loc>https://achievers-video-downloader.onrender.com/contact</loc></url>
 </urlset>

@@ -42,9 +42,11 @@ fits its wrapper. Actual third-party creative layout and ad content are unverifi
 - Check both themes, narrow screens, ad failure/blocking and download success.
 - Preserve manifest, service-worker registration and installation behavior.
   Do not cache third-party ad responses in the service worker.
-- - Use only these approved banner units. No Popunder, Smartlink, Social Bar,
+- Use only these approved banner units. No Popunder, Smartlink, Social Bar,
   anti-adblock or deceptive download-like ads.
-- Adult ads are currently enabled for these placements in the Adsterra
-  publisher account. This is an intentional publisher setting and may be
-  disabled later without changing the frontend integration, unless Adsterra
-  provides replacement ad-unit code.
+- Adult ads are currently enabled and locked for these placements in the
+  Adsterra publisher account. Do not describe them as disabled or imply that
+  visitors can turn them off through this site. Any future change requires
+  verification of the provider/account options and supplied unit codes.
+- The About, Privacy, Terms, and Contact pages are ad-free. The Privacy Policy
+  discloses the current advertising setting and third-party data processing.

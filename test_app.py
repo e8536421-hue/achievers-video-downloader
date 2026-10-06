@@ -457,7 +457,7 @@ def test_unhandled_utility_error_noindex(monkeypatch):
     assert response.json() == {"detail": "An unexpected server error occurred."}
 
 
-def test_robots_and_homepage_only_sitemap(client):
+def test_robots_and_public_pages_sitemap(client):
     import xml.etree.ElementTree as ET
 
     robots = client.get("/robots.txt")
@@ -473,7 +473,9 @@ def test_robots_and_homepage_only_sitemap(client):
     ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9"}
     assert root.tag == "{" + ns["s"] + "}urlset"
     assert [node.text for node in root.findall("s:url/s:loc", ns)] == [
-        "https://achievers-video-downloader.onrender.com/"
+        "https://achievers-video-downloader.onrender.com/",
+        *["https://achievers-video-downloader.onrender.com/" + slug
+          for slug in ("about", "privacy", "terms", "contact")]
     ]
     assert root.findall(".//s:lastmod", ns) == []
     assert "x-robots-tag" not in robots.headers and "x-robots-tag" not in sitemap.headers
@@ -497,7 +499,7 @@ def test_pwa_resources_and_missing_pages(client):
     assert client.get("/redoc").status_code == 404
 
 
-def homepage_document(client):
+def homepage_document(client, path="/"):
     """Parse server-delivered content, excluding scripts and styles from copy."""
     from html.parser import HTMLParser
 
@@ -542,7 +544,7 @@ def homepage_document(client):
                 self.excluded = None
 
     document = Document()
-    document.feed(client.get('/').text)
+    document.feed(client.get(path).text)
     return document
 
 
@@ -596,7 +598,7 @@ def test_homepage_visible_help_and_conservative_claims(client):
     links = [attrs.get('href') for tag, attrs in document.tags if tag == 'a']
     for target in targets:
         assert target in ids and '#' + target in links
-    assert not any(link in {'/about', '/privacy', '/terms', '/contact'} for link in links)
+    assert {'/about', '/privacy', '/terms', '/contact'} <= set(links)
     html = client.get('/').text
     assert html.index('id="f"') < html.index('id="how-to-download"')
 
@@ -614,3 +616,65 @@ def test_homepage_ad_placements_and_reserved_space(client):
     assert 'script async="async" data-cfasync="false" src="https://bellnewyork.org/21/173bd25a12e240a688efa71a28dc9bbf"' in html
     assert 'id="container-173bd25a12e240a688efa71a28dc9bbf"' in html
     assert 'min-height: 180px;' in html and 'height: 90px;' in html
+
+
+@pytest.mark.parametrize("slug", ["about", "privacy", "terms", "contact"])
+def test_trust_routes_and_navigation(client, slug):
+    path = "/" + slug
+    response = client.get(path)
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    assert "noindex" not in response.headers.get("x-robots-tag", "").lower()
+    document = homepage_document(client, path)
+    assert len([text for tag, text in document.headings if tag == "h1"]) == 1
+    assert len([text for tag, text in document.headings if tag == "title"]) == 1
+    assert [attrs["href"] for tag, attrs in document.tags
+            if tag == "link" and attrs.get("rel") == "canonical"] == [
+                "https://achievers-video-downloader.onrender.com" + path]
+    metas = [attrs for tag, attrs in document.tags if tag == "meta"]
+    assert any(attrs.get("name") == "description" and attrs.get("content") for attrs in metas)
+    assert not any("noindex" in attrs.get("content", "").lower() for attrs in metas)
+    links = {attrs.get("href") for tag, attrs in document.tags if tag == "a"}
+    assert {"/", "/about", "/privacy", "/terms", "/contact"} <= links
+    assert any(tag == "footer" for tag, attrs in document.tags)
+    assert not any(tag in {"script", "iframe", "form"} for tag, attrs in document.tags)
+    assert "bellnewyork.org" not in response.text
+    assert client.head(path).status_code == 200
+    for alias in (path + "/", path + ".html"):
+        redirect = client.get(alias, follow_redirects=False)
+        assert redirect.status_code == 308 and redirect.headers["location"] == path
+        assert client.get(alias).status_code == 200
+
+
+def test_trust_unique_metadata_and_truthfulness(client):
+    import re
+    documents = [homepage_document(client, "/" + slug)
+                 for slug in ("about", "privacy", "terms", "contact")]
+    for heading in ("title", "h1"):
+        values = [text for doc in documents for tag, text in doc.headings if tag == heading]
+        assert len(values) == len(set(values)) == 4
+    descriptions = [attrs["content"] for doc in documents for tag, attrs in doc.tags
+                    if tag == "meta" and attrs.get("name") == "description"]
+    assert len(set(descriptions)) == 4
+    texts = [" ".join(" ".join(doc.text).split()) for doc in documents]
+    about, privacy, terms, contact = texts
+    assert "TikTok and Facebook" in about and "anti-bot challenges" in about
+    assert "own or are authorized to download" in about and "own or are authorized to download" in terms
+    for restriction in ("DRM", "authentication", "paywalls", "geographic", "technical restrictions"):
+        assert restriction in terms
+    assert "Do not use the service to bypass" in terms
+    for detail in ("localStorage", "six", "Clear history", "JOB_TTL", "15 minutes", "30 seconds",
+                   "no startup scan", "rate limiting", "cookies", "Google Fonts", "does not implement response caching"):
+        assert detail in privacy
+    assert "Adult ads are currently enabled and locked" in privacy
+    assert "direct contact channel is not yet published" in contact
+    for text in texts:
+        assert not re.search(r"registered company|registered office|GDPR.compliant|CCPA.compliant|we collect no data|we never use cookies", text, re.I)
+    for doc in documents:
+        links = [attrs.get("href", "") for tag, attrs in doc.tags if tag == "a"]
+        assert not any(link.startswith(("mailto:", "tel:")) or "github.com" in link for link in links)
+    home = client.get("/").text
+    footer = home[home.index("<footer>"):home.index("</footer>")]
+    for slug in ("about", "privacy", "terms", "contact"):
+        assert 'href="/' + slug + '"' in footer
+    assert "Files are automatically deleted from the server after 15 minutes." not in footer
