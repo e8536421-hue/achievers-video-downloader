@@ -561,7 +561,7 @@ def test_homepage_seo_metadata_and_schema(client):
     assert metas['og:description'] == metas['twitter:description'] == description
     assert metas['og:type'] == 'website' and metas['twitter:card'] == 'summary'
     assert metas['og:url'] == 'https://achievers-video-downloader.onrender.com/'
-    assert 'og:image' not in metas and 'twitter:image' not in metas
+    assert metas['og:image'] == metas['twitter:image'] == 'https://achievers-video-downloader.onrender.com/icon-512.png'
     assert len(document.schemas) == 1
     schema = document.schemas[0]
     assert schema['@context'] == 'https://schema.org'
