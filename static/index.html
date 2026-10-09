@@ -1035,15 +1035,20 @@
     }
   </style>
 <meta property="og:type" content="website">
-<meta property="og:title" content="Free Online Video Downloader | Achievers">
-<meta property="og:description" content="Download supported public videos from a link. Choose available video quality or MP3 audio where supported. Free to use, with no account required.">
+<meta property="og:title" content="Found a video worth keeping? Try Achievers free">
+<meta property="og:description" content="Paste a supported public video link, choose your format, and save it. Free, with no account required.">
 <meta property="og:url" content="https://achievers-video-downloader.onrender.com/">
 <meta property="og:site_name" content="Achievers Video Downloader">
-<meta property="og:image" content="https://achievers-video-downloader.onrender.com/icon-512.png">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Free Online Video Downloader | Achievers">
-<meta name="twitter:description" content="Download supported public videos from a link. Choose available video quality or MP3 audio where supported. Free to use, with no account required.">
-<meta name="twitter:image" content="https://achievers-video-downloader.onrender.com/icon-512.png">
+<meta property="og:image" content="https://achievers-video-downloader.onrender.com/share-preview-v1.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="Achievers — Found a video worth keeping? Paste a link. Choose a format. Save it.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Found a video worth keeping? Try Achievers free">
+<meta name="twitter:description" content="Paste a supported public video link, choose your format, and save it. Free, with no account required.">
+<meta name="twitter:image" content="https://achievers-video-downloader.onrender.com/share-preview-v1.png">
+<meta name="twitter:image:alt" content="Achievers — Found a video worth keeping? Paste a link. Choose a format. Save it.">
   <link rel="stylesheet" href="/refresh.css?v=2">
 </head>
 
@@ -1421,7 +1426,7 @@
 
   async function shareAchievers() {
     const status = $('#shareStatus');
-    const data = {title: 'Achievers Video Downloader', text: 'Save supported public videos with Achievers. Free, with no account required.', url: 'https://achievers-video-downloader.onrender.com/'};
+    const data = {title: 'Found a video worth keeping? Try Achievers free', text: 'Found a video worth keeping? Save supported public videos with Achievers — free, with no account required.', url: 'https://achievers-video-downloader.onrender.com/'};
     try {
       if (navigator.share) { await navigator.share(data); status.textContent = 'Thanks for sharing Achievers!'; }
       else if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(data.url); status.textContent = 'Website link copied. Send it to a friend!'; }
