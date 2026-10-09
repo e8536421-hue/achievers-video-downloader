@@ -557,11 +557,14 @@ def test_homepage_seo_metadata_and_schema(client):
              for tag, attrs in document.tags if tag == 'meta'}
     description = metas['description']
     assert 'supported public videos' in description and 'where supported' in description
-    assert metas['og:title'] == metas['twitter:title'] == title
-    assert metas['og:description'] == metas['twitter:description'] == description
-    assert metas['og:type'] == 'website' and metas['twitter:card'] == 'summary'
+    assert metas['og:title'] == metas['twitter:title'] == 'Found a video worth keeping? Try Achievers free'
+    assert metas['og:description'] == metas['twitter:description'] == 'Paste a supported public video link, choose your format, and save it. Free, with no account required.'
+    assert metas['og:type'] == 'website' and metas['twitter:card'] == 'summary_large_image'
     assert metas['og:url'] == 'https://achievers-video-downloader.onrender.com/'
-    assert metas['og:image'] == metas['twitter:image'] == 'https://achievers-video-downloader.onrender.com/icon-512.png'
+    assert metas['og:image'] == metas['twitter:image'] == 'https://achievers-video-downloader.onrender.com/share-preview-v1.png'
+    image = client.get('/share-preview-v1.png')
+    assert image.status_code == 200 and image.headers['content-type'] == 'image/png'
+    assert metas['og:image:width'] == '1200' and metas['og:image:height'] == '630'
     assert len(document.schemas) == 1
     schema = document.schemas[0]
     assert schema['@context'] == 'https://schema.org'
