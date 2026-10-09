@@ -1,5 +1,5 @@
 :root { --bg:#f5f7fb; --primary:#21634e; --primary-dark:#174b3b; --primary-soft:#e8f4ed; --border:#dfe7e3; }
-[data-theme="dark"] { --primary:#85d5b2; --primary-dark:#235f49; --primary-soft:#152f26; --border:#2c4039; }
+[data-theme="dark"] { --bg:#070b14; --primary:#85d5b2; --primary-dark:#235f49; --primary-soft:#152f26; --border:#2c4039; }
 body { background:radial-gradient(ellipse at 50% 20%,rgba(123,182,149,.13),transparent 45%),var(--bg); }
 .header { background:color-mix(in srgb,var(--surface) 94%,transparent); }
 .nav { max-width:1120px; min-height:80px; }
