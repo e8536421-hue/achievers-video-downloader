@@ -1044,6 +1044,7 @@
 <meta name="twitter:title" content="Free Online Video Downloader | Achievers">
 <meta name="twitter:description" content="Download supported public videos from a link. Choose available video quality or MP3 audio where supported. Free to use, with no account required.">
 <meta name="twitter:image" content="https://achievers-video-downloader.onrender.com/icon-512.png">
+  <link rel="stylesheet" href="/refresh.css">
 </head>
 
 <body>
@@ -1059,6 +1060,8 @@
       </a>
 
       <div class="nav-actions">
+        <a class="nav-help" href="#how-to-download">How it works</a>
+        <button class="share-button" id="shareSite" type="button">Share Achievers <span aria-hidden="true">↗</span></button>
         <button
           class="icon-btn"
           id="themeToggle"
@@ -1129,7 +1132,7 @@
 
       <div class="eyebrow">
         <span class="eyebrow-dot"></span>
-        Paste a link to get started
+        YOUR LINK. YOUR NEXT WATCH.
       </div>
 
       <h1>
@@ -1137,15 +1140,17 @@
       </h1>
 
       <p class="hero-description">
-        Download a video from a link to supported public content. Choose available
-        video quality or MP3 audio where supported. Free to use, no account required.
+        Keep the videos you want to watch again. Paste a supported public link,
+        choose your format, and save it to your device. Free, with no account required.
       </p>
 
     </section>
 
+    <div class="platform-pills" aria-label="Tested platforms"><span>TikTok</span><span>Facebook</span><a href="#supported-platforms">Check platform support ↗</a></div>
     <!-- DOWNLOADER -->
     <section class="downloader-card" aria-label="Video downloader">
 
+      <div class="card-heading"><span class="card-symbol" aria-hidden="true">↓</span><div><h2>Start with a video link</h2><p>Something worth keeping? Save it here.</p></div><span class="free-label">FREE TO USE</span></div>
       <div class="drop-zone" id="dropZone">
 
         <form id="f">
@@ -1206,6 +1211,7 @@
 
     </section>
 
+    <p class="permission-note">Save only content you own or have permission to download.</p>
     <!-- TRUST -->
     <section class="trust-row" aria-label="Service features">
 
@@ -1269,6 +1275,8 @@
       Install Achievers Downloader as an app
     </button>
 
+    <section class="share-panel" aria-labelledby="share-heading"><div><span class="section-kicker">GOOD FINDS ARE BETTER SHARED</span><h2 id="share-heading">Know someone who would love this?</h2><p>Send them Achievers. Their next saved video starts with you.</p></div><button class="btn btn-primary" id="shareFriend" type="button">Share with a friend ↗</button></section>
+    <p id="shareStatus" class="share-status" role="status" aria-live="polite"></p>
     <div class="homepage-guide">
       <nav class="section-nav" aria-label="Download help">
         <a href="#how-to-download">How to download</a>
@@ -1410,6 +1418,20 @@
 
     return ` • ${Math.max(1, Math.round(bytes / 1e6))} MB`;
   };
+
+  async function shareAchievers() {
+    const status = $('#shareStatus');
+    const data = {title: 'Achievers Video Downloader', text: 'Save supported public videos with Achievers. Free, with no account required.', url: 'https://achievers-video-downloader.onrender.com/'};
+    try {
+      if (navigator.share) { await navigator.share(data); status.textContent = 'Thanks for sharing Achievers!'; }
+      else if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(data.url); status.textContent = 'Website link copied. Send it to a friend!'; }
+      else { status.replaceChildren(document.createTextNode('Share this address: '), el('a', {href: data.url, textContent: data.url})); }
+    } catch (error) {
+      if (error.name !== 'AbortError') { status.textContent = 'Copy this address to share: ' + data.url; }
+    }
+  }
+  $('#shareSite').addEventListener('click', shareAchievers);
+  $('#shareFriend').addEventListener('click', shareAchievers);
 
   /* ───────────────────────── API ───────────────────────── */
 
