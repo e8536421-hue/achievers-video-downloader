@@ -1426,13 +1426,22 @@
 
   async function shareAchievers() {
     const status = $('#shareStatus');
-    const data = {title: 'Found a video worth keeping? Try Achievers free', text: 'Found a video worth keeping? Save supported public videos with Achievers — free, with no account required.', url: 'https://achievers-video-downloader.onrender.com/'};
+    const invitation = 'Found a video worth keeping? 🎬\nTry Achievers: save supported public videos for free, with no account required.\n\nhttps://achievers-video-downloader.onrender.com/';
+    const data = {title: 'Found a video worth keeping? Try Achievers free', text: invitation};
+    async function copyInvitation() {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(invitation);
+        status.textContent = 'Invitation and link copied. Paste them into your chat!';
+      } else { status.textContent = invitation; }
+    }
     try {
       if (navigator.share) { await navigator.share(data); status.textContent = 'Thanks for sharing Achievers!'; }
-      else if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(data.url); status.textContent = 'Website link copied. Send it to a friend!'; }
-      else { status.replaceChildren(document.createTextNode('Share this address: '), el('a', {href: data.url, textContent: data.url})); }
+      else { await copyInvitation(); }
     } catch (error) {
-      if (error.name !== 'AbortError') { status.textContent = 'Copy this address to share: ' + data.url; }
+      if (error.name !== 'AbortError') {
+        try { await copyInvitation(); }
+        catch { status.textContent = invitation; }
+      }
     }
   }
   $('#shareSite').addEventListener('click', shareAchievers);
