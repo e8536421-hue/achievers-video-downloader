@@ -14,6 +14,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import yt_dlp
+from video_compat import CompatibleMP4PP
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -609,6 +610,8 @@ def info(
 
     try:
         with PublicYoutubeDL(options) as ydl:
+            if not req.audio and not req.subs:
+                ydl.add_post_processor(CompatibleMP4PP(ydl))
             data = ydl.extract_info(
                 req.url,
                 download=False,
@@ -920,6 +923,8 @@ def _run_job(
 
     try:
         with PublicYoutubeDL(options) as ydl:
+            if not req.audio and not req.subs:
+                ydl.add_post_processor(CompatibleMP4PP(ydl))
             ydl.download(
                 [req.url]
             )
