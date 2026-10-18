@@ -224,14 +224,14 @@ def fake_download(monkeypatch, suffix="mp4", size=100, failure=None, produce=Tru
     class Downloader:
         def __init__(self, options):
             self.options = options
-            fake_download.options = options
+            fake_download.options = options
             self.params = options
         def __enter__(self):
             return self
         def __exit__(self, *args):
             return False
-        def add_post_processor(self, processor):
-            assert processor.__class__.__name__ == 'CompatibleMP4PP'
+        def add_post_processor(self, processor):
+            assert processor.__class__.__name__ == 'CompatibleMP4PP'
         def download(self, urls):
             assert backend.jobs["job"]["state"] == "running"
             out = backend.WORKDIR / "job"

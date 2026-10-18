@@ -610,8 +610,6 @@ def info(
 
     try:
         with PublicYoutubeDL(options) as ydl:
-            if not req.audio and not req.subs:
-                ydl.add_post_processor(CompatibleMP4PP(ydl))
             data = ydl.extract_info(
                 req.url,
                 download=False,
