@@ -24,7 +24,7 @@ class CompatibleMP4PP(FFmpegPostProcessor):
         opts = ['-map', f"0:{video['index']}", '-map', '0:a:0?',
                 '-c:v', 'copy' if copy_video else 'libx264']
         if not copy_video:
-            opts += ['-preset', 'veryfast', '-crf', '23', '-pix_fmt', 'yuv420p',
+            opts += ['-preset', 'ultrafast', '-crf', '23', '-threads', '2', '-pix_fmt', 'yuv420p',
                      '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2']
         opts += ['-c:a', 'copy' if copy_audio else 'aac']
         if not copy_audio:

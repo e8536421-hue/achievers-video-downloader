@@ -803,9 +803,12 @@ def _run_job(
         "format": fmt,
 
         "format_sort": [
+            "vcodec:h264",
+            "acodec:aac",
             "res",
             "ext:mp4:m4a",
         ],
+        "format_sort_force": True,
 
         "merge_output_format": "mp4",
 

@@ -1312,7 +1312,7 @@
       <section class="guide-section" id="quality-formats" aria-labelledby="formats-heading">
         <h2 id="formats-heading">Video Quality &amp; Formats</h2>
         <p>Quality choices come from the formats reported by the source. <strong>Best quality</strong> requests the best available source streams; selecting a resolution requests a stream up to that height where available, with a fallback if necessary. It does not improve the original video or guarantee HD.</p>
-        <p>The downloader prefers MP4-compatible streams and requests MP4 when merging video and audio. The final file format depends on the source and processing; MP4 is not guaranteed.</p>
+        <p>To reduce waiting, the downloader prefers H.264 video and AAC audio that can be saved without conversion. This can select a lower resolution than a source that needs conversion. Incompatible video is converted to a playable MP4; large videos can take longer to process.</p>
         <p><strong>Audio MP3</strong> requests audio extraction and conversion to MP3. It requires accessible audio and successful server processing, so conversion may fail for some links. The option does not guarantee that a particular video supports audio download.</p>
       </section>
 
@@ -2142,8 +2142,8 @@
         } else {
 
           status.textContent =
-            progress >= 100
-              ? 'Finalizing your file...'
+            progress >= 99
+              ? 'Video received. Processing for playback — this can take longer for large videos.'
               : 'Preparing your file...';
         }
 

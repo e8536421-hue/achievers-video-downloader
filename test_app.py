@@ -593,7 +593,8 @@ def test_homepage_visible_help_and_conservative_claims(client):
     assert 'YouTube: downloads are currently unreliable' in text and 'anti-bot challenges' in text
     assert 'YouTube is not currently offered as a working supported platform.' in text
     assert not re.search(r'no[ -]?watermark|any website|all websites|guaranteed (HD|MP4|MP3)', text, re.I)
-    assert 'MP4 is not guaranteed' in text
+    assert 'prefers H.264 video and AAC audio' in text
+    assert 'can select a lower resolution' in text
     assert 'conversion may fail' in text
     assert 'Public visibility alone does not grant permission' in text
     assert 'do not bypass those controls' in text

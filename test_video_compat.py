@@ -4,6 +4,7 @@ import pytest
 from yt_dlp.utils import PostProcessingError
 
 from video_compat import CompatibleMP4PP
+from yt_dlp import YoutubeDL
 
 
 @pytest.mark.parametrize('codec,pixel,audio,expected', [
@@ -32,6 +33,29 @@ def test_codec_normalization(tmp_path, codec, pixel, audio, expected):
         assert args[args.index('-c:a') + 1] == ('aac' if audio == 'opus' else 'copy')
         assert result['filepath'].endswith('.compatible.mp4')
         assert removed == [str(source)]
+        if expected == 'libx264':
+            assert args[args.index('-preset') + 1] == 'ultrafast'
+            assert args[args.index('-threads') + 1] == '2'
+
+
+def test_compatible_source_preferred_before_conversion():
+    from app import _run_job
+    # Capture the actual download options, including sorting settings.
+    import inspect, ast
+    tree = ast.parse(inspect.getsource(_run_job))
+    assignment = next(n for n in ast.walk(tree) if isinstance(n, ast.Assign)
+                      and any(isinstance(t, ast.Name) and t.id == 'options' for t in n.targets))
+    values = dict(zip([k.value for k in assignment.value.keys], assignment.value.values))
+    settings = {key: ast.literal_eval(values[key]) for key in ('format_sort', 'format_sort_force')}
+    settings.update(quiet=True, format='bv*+ba/b')
+    with YoutubeDL(settings) as ydl:
+        result = ydl.process_ie_result({'id': 'test', 'title': 'test', 'formats': [
+            {'format_id': 'hevc', 'url': 'https://example.com/hevc', 'vcodec': 'hevc',
+             'acodec': 'aac', 'height': 1080, 'ext': 'mp4'},
+            {'format_id': 'avc', 'url': 'https://example.com/avc', 'vcodec': 'avc1.640028',
+             'acodec': 'mp4a.40.2', 'height': 720, 'ext': 'mp4'},
+        ]}, download=False)
+    assert result['format_id'] == 'avc'
 
 
 def test_missing_video_fails():
